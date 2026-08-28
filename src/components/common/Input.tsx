@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInputProps,
   ViewStyle,
+  Platform,
 } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { lightColors, darkColors, radius, spacing, typography } from '../../theme';
@@ -68,6 +69,8 @@ export const Input: React.FC<InputProps> = ({
   hasError = false,
   icon: Icon,
   style,
+  onFocus,
+  onBlur,
   ...props
 }) => {
   const colors = isDark ? darkColors : lightColors;
@@ -97,14 +100,26 @@ export const Input: React.FC<InputProps> = ({
       )}
       <TextInput
         placeholderTextColor={colors.inkSoft}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onFocus={(e) => {
+          setIsFocused(true);
+          if (onFocus) onFocus(e);
+        }}
+        onBlur={(e) => {
+          setIsFocused(false);
+          if (onBlur) onBlur(e);
+        }}
         style={[
           {
             flex: 1,
             color: colors.ink,
             fontSize: 14,
             paddingVertical: 8,
+            ...Platform.select({
+              web: {
+                outlineStyle: 'none',
+                outlineWidth: 0,
+              },
+            }),
           },
           style,
         ]}
@@ -116,8 +131,13 @@ export const Input: React.FC<InputProps> = ({
 
 interface PasswordInputProps extends Omit<InputProps, 'secureTextEntry'> {}
 
-export const PasswordInput: React.FC<PasswordInputProps> = (props) => {
+export const PasswordInput: React.FC<PasswordInputProps> = ({
+  onFocus,
+  onBlur,
+  ...props
+}) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const colors = props.isDark ? darkColors : lightColors;
 
   return (
@@ -127,7 +147,11 @@ export const PasswordInput: React.FC<PasswordInputProps> = (props) => {
         alignItems: 'center',
         backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: props.hasError ? colors.danger : colors.border,
+        borderColor: props.hasError
+          ? colors.danger
+          : isFocused
+          ? colors.brand
+          : colors.border,
         borderRadius: radius.md,
         paddingHorizontal: spacing.md,
         minHeight: 42,
@@ -136,12 +160,26 @@ export const PasswordInput: React.FC<PasswordInputProps> = (props) => {
       <TextInput
         secureTextEntry={!showPassword}
         placeholderTextColor={colors.inkSoft}
+        onFocus={(e) => {
+          setIsFocused(true);
+          if (onFocus) onFocus(e);
+        }}
+        onBlur={(e) => {
+          setIsFocused(false);
+          if (onBlur) onBlur(e);
+        }}
         style={[
           {
             flex: 1,
             color: colors.ink,
             fontSize: 14,
             paddingVertical: 8,
+            ...Platform.select({
+              web: {
+                outlineStyle: 'none',
+                outlineWidth: 0,
+              },
+            }),
           },
           props.style,
         ]}
@@ -170,6 +208,8 @@ export const TextArea: React.FC<TextAreaProps> = ({
   isDark = false,
   hasError = false,
   style,
+  onFocus,
+  onBlur,
   ...props
 }) => {
   const colors = isDark ? darkColors : lightColors;
@@ -181,8 +221,14 @@ export const TextArea: React.FC<TextAreaProps> = ({
       numberOfLines={4}
       textAlignVertical="top"
       placeholderTextColor={colors.inkSoft}
-      onFocus={() => setIsFocused(true)}
-      onBlur={() => setIsFocused(false)}
+      onFocus={(e) => {
+        setIsFocused(true);
+        if (onFocus) onFocus(e);
+      }}
+      onBlur={(e) => {
+        setIsFocused(false);
+        if (onBlur) onBlur(e);
+      }}
       style={[
         {
           backgroundColor: colors.surface,
@@ -197,6 +243,12 @@ export const TextArea: React.FC<TextAreaProps> = ({
           color: colors.ink,
           fontSize: 14,
           minHeight: 80,
+          ...Platform.select({
+            web: {
+              outlineStyle: 'none',
+              outlineWidth: 0,
+            },
+          }),
         },
         style,
       ]}

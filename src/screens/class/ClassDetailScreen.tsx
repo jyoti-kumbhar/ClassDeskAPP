@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import {
   ClassItem,
   ClassTabKey,
@@ -14,7 +14,6 @@ import {
 } from '../../types';
 import { lightColors, darkColors, radius, spacing } from '../../theme';
 import { CodeChip } from '../../components/common/CodeChip';
-import { CLASS_TABS } from '../../components/layout/Sidebar';
 import { NoticesTab } from './tabs/NoticesTab';
 import { ResourcesTab } from './tabs/ResourcesTab';
 import { AssignmentsTab } from './tabs/AssignmentsTab';
@@ -137,49 +136,6 @@ export const ClassDetailScreen: React.FC<ClassDetailScreenProps> = ({
           </View>
         )}
       </View>
-
-      {/* Tab Navigation Pill Bar */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={{ marginBottom: spacing.lg }}
-      >
-        <View style={{ flexDirection: 'row', gap: 6 }}>
-          {CLASS_TABS.map((t) => {
-            const isActive = tab === t.key;
-            const Icon = t.icon;
-            return (
-              <TouchableOpacity
-                key={t.key}
-                activeOpacity={0.8}
-                onPress={() => setTab(t.key)}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 6,
-                  paddingVertical: 8,
-                  paddingHorizontal: 14,
-                  borderRadius: radius.md,
-                  backgroundColor: isActive ? colors.brandTint : colors.surface,
-                  borderWidth: 1,
-                  borderColor: isActive ? colors.brand : colors.border,
-                }}
-              >
-                <Icon size={16} color={isActive ? colors.brandDark : colors.inkSoft} />
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: isActive ? '700' : '500',
-                    color: isActive ? colors.brandDark : colors.ink,
-                  }}
-                >
-                  {t.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </ScrollView>
 
       {/* Active Tab Panel */}
       {tab === 'notices' && (

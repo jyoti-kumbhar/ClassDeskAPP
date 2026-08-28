@@ -8,7 +8,6 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import {
-  School,
   Home,
   BookOpen,
   Users,
@@ -17,6 +16,7 @@ import {
   UserCog,
   LogOut,
   ChevronLeft,
+  ChevronRight,
   Bell,
   Folder,
   ClipboardCheck,
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react-native';
 import { UserRole, ScreenName, ClassTabKey, ClassItem } from '../../types';
 import { lightColors, darkColors, radius, spacing, shadows } from '../../theme';
+import { BrandLogo } from '../common/BrandLogo';
 
 interface SidebarProps {
   role: UserRole;
@@ -65,7 +66,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onBackToClasses,
   instituteName,
   isDark = false,
-  onToggleTheme,
   onLogout,
   collapsed = false,
   setCollapsed,
@@ -106,11 +106,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (isMobile && onCloseMobile) onCloseMobile();
   };
 
+  const sidebarWidth = isMobile ? 280 : collapsed ? 76 : 250;
+
   const renderContent = () => (
     <View
       style={{
-        flex: 1,
-        width: isMobile ? 260 : collapsed ? 68 : 220,
+        width: sidebarWidth,
+        minWidth: sidebarWidth,
+        maxWidth: sidebarWidth,
+        flexShrink: 0,
         backgroundColor: colors.surface,
         borderRightWidth: isMobile ? 0 : 1,
         borderRightColor: colors.border,
@@ -125,43 +129,58 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Brand Header */}
         <View
           style={{
-            flexDirection: 'row',
+            flexDirection: collapsed && !isMobile ? 'column' : 'row',
             alignItems: 'center',
             justifyContent: isMobile ? 'space-between' : collapsed ? 'center' : 'space-between',
+            gap: collapsed && !isMobile ? spacing.sm : 0,
             marginBottom: spacing.lg,
-            paddingHorizontal: spacing.xs,
+            paddingHorizontal: collapsed ? 0 : spacing.xs,
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-            <View
+          {/* Logo with clean brand typography */}
+          <BrandLogo
+            size="md"
+            showText={!collapsed || isMobile}
+            showSubtitle={!collapsed || isMobile}
+            instituteName={instituteName}
+            isDark={isDark}
+          />
+
+          {/* Desktop Toggle Button */}
+          {!isMobile && setCollapsed && (
+            <TouchableOpacity
+              onPress={() => setCollapsed(!collapsed)}
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: radius.md,
-                backgroundColor: colors.brand,
+                width: collapsed ? 36 : 30,
+                height: collapsed ? 36 : 30,
                 alignItems: 'center',
                 justifyContent: 'center',
+                borderRadius: radius.md,
+                backgroundColor: colors.surface2,
+              }}
+              accessibilityLabel={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {collapsed ? (
+                <ChevronRight size={18} color={colors.inkSoft} />
+              ) : (
+                <ChevronLeft size={18} color={colors.inkSoft} />
+              )}
+            </TouchableOpacity>
+          )}
+
+          {/* Mobile Close Button */}
+          {isMobile && onCloseMobile && (
+            <TouchableOpacity
+              onPress={onCloseMobile}
+              style={{
+                width: 34,
+                height: 34,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: radius.md,
+                backgroundColor: colors.surface2,
               }}
             >
-              <School size={20} color="#FFFFFF" />
-            </View>
-            {(!collapsed || isMobile) && (
-              <View>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.ink }}>
-                  ClassDesk
-                </Text>
-                <Text
-                  numberOfLines={1}
-                  style={{ fontSize: 11, color: colors.inkSoft, maxWidth: 140 }}
-                >
-                  {instituteName}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {isMobile && onCloseMobile && (
-            <TouchableOpacity onPress={onCloseMobile} style={{ padding: 4 }}>
               <X size={20} color={colors.inkSoft} />
             </TouchableOpacity>
           )}
@@ -178,16 +197,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: spacing.xs,
-                  paddingVertical: 8,
-                  paddingHorizontal: 8,
+                  height: !isMobile && collapsed ? 46 : 38,
+                  width: !isMobile && collapsed ? 46 : '100%',
+                  alignSelf: !isMobile && collapsed ? 'center' : 'auto',
+                  paddingHorizontal: !isMobile && collapsed ? 0 : 10,
                   borderRadius: radius.md,
                   backgroundColor: colors.surface2,
                   marginBottom: spacing.xs,
+                  justifyContent: !isMobile && collapsed ? 'center' : 'flex-start',
                 }}
               >
-                <ChevronLeft size={16} color={colors.brand} />
+                <ChevronLeft size={20} color={colors.brand} />
                 {(!collapsed || isMobile) && (
-                  <Text style={{ fontSize: 12.5, fontWeight: '700', color: colors.brand }}>
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: colors.brand }}>
                     All Classes
                   </Text>
                 )}
@@ -197,12 +219,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <Text
                   numberOfLines={1}
                   style={{
-                    fontSize: 11,
+                    fontSize: 11.5,
                     fontWeight: '700',
                     color: colors.inkSoft,
                     textTransform: 'uppercase',
                     letterSpacing: 0.5,
-                    paddingHorizontal: 8,
+                    paddingHorizontal: 10,
                     paddingVertical: 4,
                   }}
                 >
@@ -221,19 +243,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      gap: spacing.sm,
-                      paddingVertical: 9,
-                      paddingHorizontal: !isMobile && collapsed ? 0 : 10,
+                      gap: spacing.md,
+                      height: !isMobile && collapsed ? 46 : 42,
+                      width: !isMobile && collapsed ? 46 : '100%',
+                      alignSelf: !isMobile && collapsed ? 'center' : 'auto',
+                      paddingHorizontal: !isMobile && collapsed ? 0 : 12,
                       justifyContent: !isMobile && collapsed ? 'center' : 'flex-start',
-                      borderRadius: radius.md,
+                      borderRadius: radius.lg,
                       backgroundColor: isActive ? colors.brandTint : 'transparent',
                     }}
                   >
-                    <Icon size={18} color={isActive ? colors.brandDark : colors.inkSoft} />
+                    <Icon
+                      size={!isMobile && collapsed ? 22 : 21}
+                      color={isActive ? colors.brandDark : colors.inkSoft}
+                      strokeWidth={2.1}
+                    />
                     {(!collapsed || isMobile) && (
                       <Text
                         style={{
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: isActive ? '700' : '500',
                           color: isActive ? colors.brandDark : colors.inkSoft,
                         }}
@@ -259,19 +287,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      gap: spacing.sm,
-                      paddingVertical: 9,
-                      paddingHorizontal: !isMobile && collapsed ? 0 : 10,
+                      gap: spacing.md,
+                      height: !isMobile && collapsed ? 46 : 42,
+                      width: !isMobile && collapsed ? 46 : '100%',
+                      alignSelf: !isMobile && collapsed ? 'center' : 'auto',
+                      paddingHorizontal: !isMobile && collapsed ? 0 : 12,
                       justifyContent: !isMobile && collapsed ? 'center' : 'flex-start',
-                      borderRadius: radius.md,
+                      borderRadius: radius.lg,
                       backgroundColor: isActive ? colors.brandTint : 'transparent',
                     }}
                   >
-                    <Icon size={18} color={isActive ? colors.brandDark : colors.inkSoft} />
+                    <Icon
+                      size={!isMobile && collapsed ? 22 : 21}
+                      color={isActive ? colors.brandDark : colors.inkSoft}
+                      strokeWidth={2.1}
+                    />
                     {(!collapsed || isMobile) && (
                       <Text
                         style={{
-                          fontSize: 13.5,
+                          fontSize: 14.5,
                           fontWeight: isActive ? '700' : '500',
                           color: isActive ? colors.brandDark : colors.inkSoft,
                         }}
@@ -304,16 +338,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            gap: spacing.sm,
-            paddingVertical: 8,
-            paddingHorizontal: !isMobile && collapsed ? 0 : 10,
+            gap: spacing.md,
+            height: !isMobile && collapsed ? 46 : 42,
+            width: !isMobile && collapsed ? 46 : '100%',
+            alignSelf: !isMobile && collapsed ? 'center' : 'auto',
+            paddingHorizontal: !isMobile && collapsed ? 0 : 12,
             justifyContent: !isMobile && collapsed ? 'center' : 'flex-start',
-            borderRadius: radius.md,
+            borderRadius: radius.lg,
           }}
         >
-          <LogOut size={16} color={colors.danger} />
+          <LogOut size={20} color={colors.danger} strokeWidth={2.0} />
           {(!collapsed || isMobile) && (
-            <Text style={{ fontSize: 13, fontWeight: '600', color: colors.danger }}>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.danger }}>
               Log Out
             </Text>
           )}

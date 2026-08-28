@@ -17,18 +17,18 @@ export const RowActions: React.FC<RowActionsProps> = ({
   const colors = isDark ? darkColors : lightColors;
 
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       {onEdit && (
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={onEdit}
           style={{
-            padding: 6,
-            borderRadius: radius.sm,
+            padding: 7,
+            borderRadius: radius.md,
             backgroundColor: colors.surface2,
           }}
         >
-          <Pencil size={14} color={colors.inkSoft} />
+          <Pencil size={16} color={colors.inkSoft} />
         </TouchableOpacity>
       )}
       {onDelete && (
@@ -36,12 +36,12 @@ export const RowActions: React.FC<RowActionsProps> = ({
           activeOpacity={0.7}
           onPress={onDelete}
           style={{
-            padding: 6,
-            borderRadius: radius.sm,
+            padding: 7,
+            borderRadius: radius.md,
             backgroundColor: colors.dangerTint,
           }}
         >
-          <Trash2 size={14} color={colors.danger} />
+          <Trash2 size={16} color={colors.danger} />
         </TouchableOpacity>
       )}
     </View>

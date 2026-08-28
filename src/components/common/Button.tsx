@@ -54,17 +54,17 @@ export const Button: React.FC<ButtonProps> = ({
 
     // Size
     if (size === 'sm') {
-      base.paddingVertical = 6;
-      base.paddingHorizontal = 11;
-      base.gap = 4;
+      base.paddingVertical = 7;
+      base.paddingHorizontal = 12;
+      base.gap = 6;
     } else if (size === 'lg') {
-      base.paddingVertical = 12;
-      base.paddingHorizontal = 20;
+      base.paddingVertical = 13;
+      base.paddingHorizontal = 22;
       base.gap = 8;
     } else {
-      base.paddingVertical = 9;
-      base.paddingHorizontal = 16;
-      base.gap = 6;
+      base.paddingVertical = 10;
+      base.paddingHorizontal = 18;
+      base.gap = 7;
     }
 
     // Variant
@@ -114,7 +114,7 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const textColor = getTextColor();
-  const iconSize = size === 'sm' ? 14 : size === 'lg' ? 18 : 16;
+  const iconSize = size === 'sm' ? 16 : size === 'lg' ? 20 : 18;
 
   return (
     <TouchableOpacity
@@ -127,13 +127,13 @@ export const Button: React.FC<ButtonProps> = ({
         <ActivityIndicator size="small" color={textColor} />
       ) : (
         <>
-          {Icon && <Icon size={iconSize} color={textColor} />}
+          {Icon && <Icon size={iconSize} color={textColor} strokeWidth={2.0} />}
           {typeof children === 'string' ? (
             <Text
               style={[
                 {
                   color: textColor,
-                  fontSize: size === 'sm' ? 12.5 : size === 'lg' ? 15 : 13.5,
+                  fontSize: size === 'sm' ? 13 : size === 'lg' ? 15.5 : 14,
                   fontWeight: '600',
                 },
                 textStyle,

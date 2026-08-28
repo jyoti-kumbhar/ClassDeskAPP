@@ -5,7 +5,43 @@ import {
   StatusBar,
   StyleSheet,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
+
+// Global Web input outline & favicon setup
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const styleId = 'classdesk-input-outline-reset';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      input, textarea, select, [contenteditable="true"] {
+        outline: none !important;
+        outline-style: none !important;
+        outline-width: 0 !important;
+        box-shadow: none !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+      input:focus, textarea:focus, select:focus, [contenteditable="true"]:focus {
+        outline: none !important;
+        outline-style: none !important;
+        outline-width: 0 !important;
+        box-shadow: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  try {
+    let iconLink = document.querySelector("link[rel*='icon']") as HTMLLinkElement | null;
+    if (!iconLink) {
+      iconLink = document.createElement('link');
+      iconLink.rel = 'shortcut icon';
+      document.head.appendChild(iconLink);
+    }
+    iconLink.href = '/favicon.svg';
+  } catch (_) {}
+}
 import {
   UserRole,
   ScreenName,

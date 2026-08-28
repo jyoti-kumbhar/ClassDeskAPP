@@ -38,18 +38,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     >
       <View
         style={{
-          width: 54,
-          height: 54,
-          borderRadius: 27,
+          width: 60,
+          height: 60,
+          borderRadius: 30,
           backgroundColor: colors.surface2,
           alignItems: 'center',
           justifyContent: 'center',
           marginBottom: spacing.sm,
         }}
       >
-        <Icon size={28} color={colors.inkSoft} strokeWidth={1.5} />
+        <Icon size={32} color={colors.inkSoft} strokeWidth={1.8} />
       </View>
-      <Text style={{ fontSize: 16, fontWeight: '600', color: colors.ink, textAlign: 'center' }}>
+      <Text style={{ fontSize: 17, fontWeight: '700', color: colors.ink, textAlign: 'center' }}>
         {title}
       </Text>
       {hint && (

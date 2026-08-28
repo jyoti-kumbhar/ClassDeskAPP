@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Menu, Sun, Moon } from 'lucide-react-native';
 import { Profile } from '../../types';
 import { getInitials } from '../../services/dataStore';
-import { lightColors, darkColors, radius, spacing, typography } from '../../theme';
+import { lightColors, darkColors, radius, spacing } from '../../theme';
 
 interface TopbarProps {
   user: Profile;
@@ -36,25 +36,27 @@ export const Topbar: React.FC<TopbarProps> = ({
         backgroundColor: colors.surface,
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
+        flexShrink: 0,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 }}>
-        {onToggleSidebar && (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1, minWidth: 0 }}>
+        {/* Hamburger menu button only on Mobile View */}
+        {isMobile && onToggleSidebar && (
           <TouchableOpacity
             onPress={onToggleSidebar}
             style={{
-              padding: 8,
+              padding: 7,
               borderRadius: radius.md,
               backgroundColor: colors.surface2,
             }}
           >
-            <Menu size={18} color={colors.ink} />
+            <Menu size={22} color={colors.ink} />
           </TouchableOpacity>
         )}
         <Text
           numberOfLines={1}
           style={{
-            fontSize: isMobile ? 16 : typography.h3.fontSize,
+            fontSize: isMobile ? 17 : 19,
             fontWeight: '700',
             color: colors.ink,
             flex: 1,
@@ -64,20 +66,20 @@ export const Topbar: React.FC<TopbarProps> = ({
         </Text>
       </View>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 0 }}>
         {onToggleTheme && (
           <TouchableOpacity
             onPress={onToggleTheme}
             style={{
-              padding: 8,
+              padding: 7,
               borderRadius: radius.md,
               backgroundColor: colors.surface2,
             }}
           >
             {isDark ? (
-              <Sun size={16} color={colors.accent} />
+              <Sun size={20} color={colors.accent} />
             ) : (
-              <Moon size={16} color={colors.inkSoft} />
+              <Moon size={20} color={colors.inkSoft} />
             )}
           </TouchableOpacity>
         )}
@@ -86,24 +88,24 @@ export const Topbar: React.FC<TopbarProps> = ({
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
           <View
             style={{
-              width: 34,
-              height: 34,
-              borderRadius: 17,
+              width: 38,
+              height: 38,
+              borderRadius: 19,
               backgroundColor: colors.accentTint,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.brandDark }}>
+            <Text style={{ fontSize: 14, fontWeight: '700', color: colors.brandDark }}>
               {initials}
             </Text>
           </View>
           {!isMobile && (
             <View style={{ marginLeft: 4 }}>
-              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.ink }}>
+              <Text style={{ fontSize: 13.5, fontWeight: '600', color: colors.ink }}>
                 {user.name}
               </Text>
-              <Text style={{ fontSize: 11, color: colors.inkSoft, textTransform: 'capitalize' }}>
+              <Text style={{ fontSize: 11.5, color: colors.inkSoft, textTransform: 'capitalize' }}>
                 {user.role}
               </Text>
             </View>

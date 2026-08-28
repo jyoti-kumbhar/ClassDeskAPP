@@ -130,34 +130,34 @@ export const FileAttachmentItem: React.FC<FileAttachmentItemProps> = ({
       ]}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-        <FileIcon size={16} color={colors.brand} />
+        <FileIcon size={20} color={colors.brand} />
         <View style={{ flex: 1 }}>
           <Text
             numberOfLines={1}
-            style={{ fontSize: 13, fontWeight: '600', color: colors.ink }}
+            style={{ fontSize: 13.5, fontWeight: '600', color: colors.ink }}
           >
             {fileName}
           </Text>
           {fileSize ? (
-            <Text style={{ fontSize: 11, color: colors.inkSoft }}>
+            <Text style={{ fontSize: 11.5, color: colors.inkSoft }}>
               {formatBytes(fileSize)}
             </Text>
           ) : null}
         </View>
       </View>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         {url && (
           <TouchableOpacity
             onPress={handleOpen}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={{
-              padding: 6,
-              borderRadius: radius.sm,
+              padding: 7,
+              borderRadius: radius.md,
               backgroundColor: colors.surface2,
             }}
           >
-            <ExternalLink size={13} color={colors.ink} />
+            <ExternalLink size={16} color={colors.ink} />
           </TouchableOpacity>
         )}
         {onDelete && (
@@ -165,12 +165,12 @@ export const FileAttachmentItem: React.FC<FileAttachmentItemProps> = ({
             onPress={onDelete}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={{
-              padding: 6,
-              borderRadius: radius.sm,
+              padding: 7,
+              borderRadius: radius.md,
               backgroundColor: colors.dangerTint,
             }}
           >
-            <Trash2 size={13} color={colors.danger} />
+            <Trash2 size={16} color={colors.danger} />
           </TouchableOpacity>
         )}
       </View>

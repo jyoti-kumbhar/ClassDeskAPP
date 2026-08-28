@@ -82,20 +82,20 @@ export const StatCard: React.FC<StatCardProps> = ({
       {Icon && (
         <View
           style={{
-            width: 36,
-            height: 36,
+            width: 42,
+            height: 42,
             borderRadius: radius.md,
             backgroundColor: colors.brandTint,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Icon size={20} color={colors.brand} />
+          <Icon size={22} color={colors.brand} strokeWidth={2.0} />
         </View>
       )}
       <View>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: colors.ink }}>{value}</Text>
-        <Text style={{ fontSize: 12, color: colors.inkSoft, marginTop: 2 }}>{title}</Text>
+        <Text style={{ fontSize: 22, fontWeight: '700', color: colors.ink }}>{value}</Text>
+        <Text style={{ fontSize: 12.5, color: colors.inkSoft, marginTop: 2 }}>{title}</Text>
       </View>
     </View>
   );

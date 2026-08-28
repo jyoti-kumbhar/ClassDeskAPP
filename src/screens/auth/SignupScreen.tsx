@@ -5,11 +5,12 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { School, UserCog, GraduationCap, BookOpen } from 'lucide-react-native';
+import { UserCog, GraduationCap, BookOpen } from 'lucide-react-native';
 import { UserRole } from '../../types';
 import { lightColors, darkColors, radius, spacing, shadows } from '../../theme';
 import { Field, Input, PasswordInput } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
+import { BrandLogo } from '../../components/common/BrandLogo';
 
 interface SignupScreenProps {
   onSignup: (name: string, email: string, pass: string, role: UserRole) => void;
@@ -62,23 +63,9 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
           width: '100%',
         }}
       >
-        <View
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: radius.md,
-            backgroundColor: colors.brand,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <School size={22} color="#FFFFFF" />
-        </View>
-        <View>
-          <Text style={{ fontSize: 20, fontWeight: '700', color: colors.ink }}>
-            ClassDesk
-          </Text>
-          <Text style={{ fontSize: 12.5, color: colors.inkSoft }}>
+        <BrandLogo size="lg" showSubtitle={false} isDark={isDark} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={{ fontSize: 12.5, color: colors.inkSoft, marginTop: 2 }}>
             The staff room, roll call and gradebook — in one place.
           </Text>
         </View>
