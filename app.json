@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "ClassDesk",
+    "slug": "classdesk",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#5B4FE0"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.classdesk.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#5B4FE0"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": []
+  }
+}
