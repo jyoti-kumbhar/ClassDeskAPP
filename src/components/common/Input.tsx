@@ -61,7 +61,7 @@ export const Field: React.FC<FieldProps> = ({
 interface InputProps extends TextInputProps {
   isDark?: boolean;
   hasError?: boolean;
-  icon?: React.ComponentType<{ size?: number; color?: string }>;
+  icon?: React.ComponentType<any>;
 }
 
 export const Input: React.FC<InputProps> = ({

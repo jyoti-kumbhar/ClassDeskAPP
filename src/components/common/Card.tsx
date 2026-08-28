@@ -47,7 +47,7 @@ export const Card: React.FC<CardProps> = ({
 interface StatCardProps {
   title: string;
   value: string | number;
-  icon?: React.ComponentType<{ size?: number; color?: string }>;
+  icon?: React.ComponentType<any>;
   isDark?: boolean;
   style?: ViewStyle;
 }

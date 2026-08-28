@@ -4,7 +4,7 @@ import { lightColors, darkColors, spacing } from '../../theme';
 import { Button } from './Button';
 
 interface EmptyStateProps {
-  icon: React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+  icon: React.ComponentType<any>;
   title: string;
   hint?: string;
   actionLabel?: string;

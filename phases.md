@@ -84,6 +84,7 @@ Implement secure authentication using Supabase Auth.
 - Logout
 - Session persistence
 - Password reset
+- (Future) Google OAuth Sign-in / Sign-up (100% Free)
 - Authenticated navigation
 - Protected screens
 
@@ -427,3 +428,19 @@ iOS is intentionally postponed.
 When iOS development begins, the existing Expo/React Native architecture should be reused.
 
 Do not rewrite the application unless a genuine platform-specific limitation requires it.
+
+---
+
+# Future Phase — Social Authentication (Google OAuth)
+
+### Goal
+
+Provide free 1-click Google Sign-in / Sign-up for Web and Android using Supabase Auth.
+
+### Tasks
+
+- Setup free OAuth 2.0 Client ID in Google Cloud Console
+- Add authorized redirect URI in Google Console (`https://<project-ref>.supabase.co/auth/v1/callback`)
+- Enable and configure Google Provider in Supabase Dashboard
+- Add "Continue with Google" button to Login & Signup screens
+- Configure seamless OAuth redirect handling across Web and Android

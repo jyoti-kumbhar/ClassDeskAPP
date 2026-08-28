@@ -41,6 +41,16 @@ export const hoursFromNow = (n: number) => {
   return d.toISOString();
 };
 
+export const isPast = (iso?: string | null) => {
+  if (!iso) return false;
+  return new Date(iso).getTime() < Date.now();
+};
+
+export const isFuture = (iso?: string | null) => {
+  if (!iso) return false;
+  return new Date(iso).getTime() > Date.now();
+};
+
 export const fmtDate = (iso: string) => {
   return new Date(iso).toLocaleDateString('en-IN', {
     day: '2-digit',

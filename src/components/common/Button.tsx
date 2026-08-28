@@ -17,7 +17,7 @@ interface ButtonProps {
   onPress?: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
-  icon?: React.ComponentType<{ size?: number; color?: string }>;
+  icon?: React.ComponentType<any>;
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;

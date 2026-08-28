@@ -796,10 +796,12 @@ export default function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    height: '100%',
   },
   appShell: {
     flex: 1,
     flexDirection: 'row',
+    height: '100%',
   },
   mainContent: {
     flex: 1,

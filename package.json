@@ -10,9 +10,12 @@
     "build:web": "expo export -p web"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~4.0.1",
+    "@opentelemetry/api": "^1.9.1",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@supabase/supabase-js": "^2.48.1",
     "expo": "~52.0.30",
+    "expo-asset": "~11.0.5",
     "expo-constants": "~17.0.5",
     "expo-document-picker": "~13.0.3",
     "expo-file-system": "~18.0.7",
