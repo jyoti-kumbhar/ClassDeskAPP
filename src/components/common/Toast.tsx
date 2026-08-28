@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text } from 'react-native';
 import { ToastMessage } from '../../types';
 import { lightColors, darkColors, radius, spacing, shadows } from '../../theme';
 

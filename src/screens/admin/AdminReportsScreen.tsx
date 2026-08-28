@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Platform, TouchableOpacity } from 'react-native';
-import { ClipboardCheck, Download, Brain, AlertTriangle } from 'lucide-react-native';
+import { ClipboardCheck, Download, Brain } from 'lucide-react-native';
 import { AppDatabase } from '../../services/dataStore';
-import { lightColors, darkColors, radius, spacing, typography } from '../../theme';
+import { lightColors, darkColors, radius, spacing } from '../../theme';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Stamp } from '../../components/common/Stamp';

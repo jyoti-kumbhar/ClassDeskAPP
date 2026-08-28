@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Switch, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Switch } from 'react-native';
 import { CalendarClock } from 'lucide-react-native';
 import { lightColors, darkColors, radius, spacing } from '../../theme';
 import { Input } from './Input';

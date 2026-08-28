@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Alert, Platform } from 'react-native';
-import { User, Trash2, Building, Check } from 'lucide-react-native';
+import { View, Text, ScrollView } from 'react-native';
+import { Trash2, Building, Check } from 'lucide-react-native';
 import { Profile, Institute, ClassItem } from '../../types';
-import { lightColors, darkColors, radius, spacing, typography, shadows } from '../../theme';
+import { getInitials } from '../../services/dataStore';
+import { lightColors, darkColors, radius, spacing } from '../../theme';
 import { Card } from '../../components/common/Card';
 import { Field, Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
@@ -33,12 +34,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [instCode, setInstCode] = useState('');
 
-  const initials = user.name
-    .split(' ')
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  const initials = getInitials(user.name);
 
   const handleSaveName = () => {
     if (!name.trim()) return;

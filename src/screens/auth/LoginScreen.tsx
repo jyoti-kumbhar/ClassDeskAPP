@@ -4,11 +4,10 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Platform,
 } from 'react-native';
-import { School, UserCog, GraduationCap, BookOpen, LogIn } from 'lucide-react-native';
-import { UserRole, Profile } from '../../types';
-import { lightColors, darkColors, radius, spacing, typography, shadows } from '../../theme';
+import { School, UserCog, GraduationCap, BookOpen } from 'lucide-react-native';
+import { UserRole } from '../../types';
+import { lightColors, darkColors, radius, spacing, shadows } from '../../theme';
 import { Field, Input, PasswordInput } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 

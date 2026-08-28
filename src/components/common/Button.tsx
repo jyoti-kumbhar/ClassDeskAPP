@@ -2,12 +2,11 @@ import React from 'react';
 import {
   TouchableOpacity,
   Text,
-  StyleSheet,
   ActivityIndicator,
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { lightColors, darkColors, radius, spacing, typography } from '../../theme';
+import { lightColors, darkColors, radius } from '../../theme';
 
 export type ButtonVariant = 'primary' | 'ghost' | 'danger' | 'ghost-danger' | 'outline';
 export type ButtonSize = 'sm' | 'md' | 'lg';

@@ -12,7 +12,7 @@ import {
   AssignmentSubmission,
   ExamAttempt,
 } from '../../types';
-import { lightColors, darkColors, radius, spacing, typography } from '../../theme';
+import { lightColors, darkColors, radius, spacing } from '../../theme';
 import { CodeChip } from '../../components/common/CodeChip';
 import { CLASS_TABS } from '../../components/layout/Sidebar';
 import { NoticesTab } from './tabs/NoticesTab';

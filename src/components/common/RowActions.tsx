@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { Pencil, Trash2 } from 'lucide-react-native';
 import { lightColors, darkColors, radius, spacing } from '../../theme';
 

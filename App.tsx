@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   SafeAreaView,
   View,
   StatusBar,
   StyleSheet,
-  Platform,
   useWindowDimensions,
 } from 'react-native';
 import {
@@ -134,7 +133,7 @@ export default function App() {
     }
 
     setAuthLoading(true);
-    const { user: newUser } = await signUpWithSupabase(email, pass, name, role);
+    const { user: newUser, error } = await signUpWithSupabase(email, pass, name, role);
     if (newUser) {
       setDb((prev) => ({
         ...prev,
@@ -143,6 +142,8 @@ export default function App() {
       setPendingUser(newUser);
       setAuthView('verify');
       showToast('Account created. Please verify your email.', 'info');
+    } else if (error) {
+      showToast(error, 'danger');
     }
     setAuthLoading(false);
   };
@@ -157,8 +158,12 @@ export default function App() {
   };
 
   const handleResetPassword = async (email: string) => {
-    await resetPasswordWithSupabase(email);
-    showToast(`Password reset link sent to ${email}.`, 'info');
+    const { success, error } = await resetPasswordWithSupabase(email);
+    if (success) {
+      showToast(`Password reset link sent to ${email}.`, 'info');
+    } else if (error) {
+      showToast(error, 'danger');
+    }
   };
 
   const handleLogout = async () => {
@@ -504,16 +509,20 @@ export default function App() {
     showToast('Student removed from class.', 'info');
   };
 
-  // Filter user classes
-  const myClasses = db.classes.filter((c) =>
-    currentUser?.role === 'teacher'
-      ? c.teacherId === currentUser.id
-      : currentUser?.role === 'student'
-      ? c.studentIds.includes(currentUser.id)
-      : true
-  );
+  // Filter user classes with memoization
+  const myClasses = useMemo(() => {
+    return db.classes.filter((c) =>
+      currentUser?.role === 'teacher'
+        ? c.teacherId === currentUser.id
+        : currentUser?.role === 'student'
+        ? c.studentIds.includes(currentUser.id)
+        : true
+    );
+  }, [db.classes, currentUser?.role, currentUser?.id]);
 
-  const activeClass = db.classes.find((c) => c.id === activeClassId) || null;
+  const activeClass = useMemo(() => {
+    return db.classes.find((c) => c.id === activeClassId) || null;
+  }, [db.classes, activeClassId]);
 
   // Title generator
   const getHeaderTitle = () => {

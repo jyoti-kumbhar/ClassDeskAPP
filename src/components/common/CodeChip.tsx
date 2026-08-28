@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, View, ViewStyle, Platform } from 'react-native';
+import { TouchableOpacity, Text, ViewStyle, Platform } from 'react-native';
 import { Copy, Check } from 'lucide-react-native';
 import { lightColors, darkColors, radius, spacing } from '../../theme';
 

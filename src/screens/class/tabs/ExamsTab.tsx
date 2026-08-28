@@ -27,7 +27,7 @@ import {
   Profile,
 } from '../../../types';
 import { fmtDateTime, fmtClock, uid } from '../../../services/dataStore';
-import { lightColors, darkColors, radius, spacing, typography, shadows } from '../../../theme';
+import { lightColors, darkColors, radius, spacing } from '../../../theme';
 import { Card } from '../../../components/common/Card';
 import { Button } from '../../../components/common/Button';
 import { Modal } from '../../../components/common/Modal';
@@ -98,6 +98,13 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
   const examStartTimeRef = useRef<number>(0);
   const violationsRef = useRef<ExamViolation[]>([]);
   const isSubmittedRef = useRef<boolean>(false);
+  const studentAnswersRef = useRef<number[]>([]);
+  const warningCountRef = useRef<number>(0);
+  const takingExamRef = useRef<Exam | null>(null);
+
+  studentAnswersRef.current = studentAnswers;
+  warningCountRef.current = warningCount;
+  takingExamRef.current = takingExam;
 
   const getExamStatus = (ex: Exam): 'upcoming' | 'active' | 'closed' => {
     const now = Date.now();
@@ -226,8 +233,9 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
   };
 
   // Finish exam attempt
-  const finishAttempt = (cheatFlag: boolean, finalWarnings: number) => {
-    if (isSubmittedRef.current || !takingExam) return;
+  const finishAttempt = (cheatFlag: boolean, finalWarnings?: number) => {
+    const exam = takingExamRef.current;
+    if (isSubmittedRef.current || !exam) return;
     isSubmittedRef.current = true;
 
     if (Platform.OS === 'web' && typeof document !== 'undefined' && document.fullscreenElement) {
@@ -236,10 +244,11 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
       } catch (e) {}
     }
 
-    const totalQuestions = takingExam.questions.length;
+    const answers = studentAnswersRef.current;
+    const warnings = finalWarnings !== undefined ? finalWarnings : warningCountRef.current;
     let score = 0;
-    takingExam.questions.forEach((q, idx) => {
-      if (studentAnswers[idx] === q.correct) {
+    exam.questions.forEach((question, idx) => {
+      if (answers[idx] === question.correct) {
         score += 1;
       }
     });
@@ -248,20 +257,20 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
 
     const attempt: ExamAttempt = {
       studentId: userId,
-      answers: studentAnswers,
+      answers,
       score,
-      warnings: finalWarnings,
+      warnings,
       cheatFlag,
       violations: violationsRef.current,
       submittedAt: new Date().toISOString(),
       timeTakenSec: timeTaken,
     };
 
-    onSubmitAttempt(takingExam.id, attempt);
+    onSubmitAttempt(exam.id, attempt);
     setTakingExam(null);
   };
 
-  // Exam Timer Countdown
+  // Exam Timer Countdown (Clean 1-second interval without recreating on answer change)
   useEffect(() => {
     if (!takingExam) return;
 
@@ -269,7 +278,7 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
       setSecondsRemaining((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          finishAttempt(false, warningCount);
+          finishAttempt(false);
           return 0;
         }
         return prev - 1;
@@ -277,7 +286,7 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [takingExam, studentAnswers, warningCount]);
+  }, [takingExam]);
 
   // Anti-Cheat Event Listeners (Tab change, window blur, fullscreen exit)
   useEffect(() => {

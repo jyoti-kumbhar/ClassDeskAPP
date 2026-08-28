@@ -4,8 +4,6 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
-  Platform,
   Modal,
   TouchableWithoutFeedback,
 } from 'react-native';
@@ -27,7 +25,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { UserRole, ScreenName, ClassTabKey, ClassItem } from '../../types';
-import { lightColors, darkColors, radius, spacing, typography, shadows } from '../../theme';
+import { lightColors, darkColors, radius, spacing, shadows } from '../../theme';
 
 interface SidebarProps {
   role: UserRole;

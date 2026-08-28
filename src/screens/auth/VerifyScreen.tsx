@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Mail, CheckCircle2, RefreshCw } from 'lucide-react-native';
 import { Profile } from '../../types';
-import { lightColors, darkColors, radius, spacing, typography, shadows } from '../../theme';
+import { lightColors, darkColors, radius, spacing, shadows } from '../../theme';
 import { Button } from '../../components/common/Button';
 
 interface VerifyScreenProps {

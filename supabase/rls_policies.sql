@@ -7,7 +7,7 @@
 CREATE OR REPLACE FUNCTION public.current_user_role()
 RETURNS TEXT AS $$
   SELECT role FROM public.profiles WHERE id = auth.uid();
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
 CREATE OR REPLACE FUNCTION public.is_class_teacher(p_class_id UUID)
 RETURNS BOOLEAN AS $$
@@ -15,7 +15,7 @@ RETURNS BOOLEAN AS $$
     SELECT 1 FROM public.classes
     WHERE id = p_class_id AND teacher_id = auth.uid()
   );
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
 CREATE OR REPLACE FUNCTION public.is_class_member(p_class_id UUID)
 RETURNS BOOLEAN AS $$
@@ -26,7 +26,7 @@ RETURNS BOOLEAN AS $$
     SELECT 1 FROM public.classes
     WHERE id = p_class_id AND teacher_id = auth.uid()
   ) OR (public.current_user_role() = 'admin');
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
 -- 1. Enable RLS on all tables
 ALTER TABLE public.institutes ENABLE ROW LEVEL SECURITY;
@@ -131,6 +131,20 @@ CREATE POLICY "Teachers and students can leave or remove members"
   );
 
 -- ============================================================================
+-- CLASS SUBJECTS POLICIES
+-- ============================================================================
+CREATE POLICY "Class members and admins can view class subjects"
+  ON public.class_subjects FOR SELECT
+  TO authenticated
+  USING (public.is_class_member(class_id));
+
+CREATE POLICY "Teachers and admins can manage class subjects"
+  ON public.class_subjects FOR ALL
+  TO authenticated
+  USING (public.is_class_teacher(class_id) OR public.current_user_role() = 'admin')
+  WITH CHECK (public.is_class_teacher(class_id) OR public.current_user_role() = 'admin');
+
+-- ============================================================================
 -- NOTICES POLICIES
 -- ============================================================================
 CREATE POLICY "Class members can read notices"
@@ -206,8 +220,34 @@ CREATE POLICY "Teachers can manage resource links"
   USING (
     EXISTS (
       SELECT 1 FROM public.resources r
-      WHERE r.id = resource_id AND public.is_class_teacher(r.class_id)
+      WHERE r.id = resource_id AND (public.is_class_teacher(r.class_id) OR public.current_user_role() = 'admin')
     )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.resources r
+      WHERE r.id = resource_id AND (public.is_class_teacher(r.class_id) OR public.current_user_role() = 'admin')
+    )
+  );
+
+-- ============================================================================
+-- RESOURCE LABELS POLICIES
+-- ============================================================================
+CREATE POLICY "Class members and admins can view resource labels"
+  ON public.resource_labels FOR SELECT
+  TO authenticated
+  USING (class_id IS NULL OR public.is_class_member(class_id));
+
+CREATE POLICY "Teachers and admins can manage resource labels"
+  ON public.resource_labels FOR ALL
+  TO authenticated
+  USING (
+    (class_id IS NOT NULL AND public.is_class_teacher(class_id))
+    OR public.current_user_role() = 'admin'
+  )
+  WITH CHECK (
+    (class_id IS NOT NULL AND public.is_class_teacher(class_id))
+    OR public.current_user_role() = 'admin'
   );
 
 -- ============================================================================
@@ -300,12 +340,13 @@ CREATE POLICY "Class members can view exams"
   TO authenticated
   USING (public.is_class_member(class_id));
 
-CREATE POLICY "Teachers can manage exams"
+CREATE POLICY "Teachers and admins can manage exams"
   ON public.exams FOR ALL
   TO authenticated
-  USING (public.is_class_teacher(class_id));
+  USING (public.is_class_teacher(class_id) OR public.current_user_role() = 'admin')
+  WITH CHECK (public.is_class_teacher(class_id) OR public.current_user_role() = 'admin');
 
-CREATE POLICY "Questions readable by members (answers hidden by frontend until released or during grading)"
+CREATE POLICY "Questions readable by members"
   ON public.exam_questions FOR SELECT
   TO authenticated
   USING (
@@ -315,13 +356,19 @@ CREATE POLICY "Questions readable by members (answers hidden by frontend until r
     )
   );
 
-CREATE POLICY "Teachers can manage exam questions"
+CREATE POLICY "Teachers and admins can manage exam questions"
   ON public.exam_questions FOR ALL
   TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM public.exams e
-      WHERE e.id = exam_id AND public.is_class_teacher(e.class_id)
+      WHERE e.id = exam_id AND (public.is_class_teacher(e.class_id) OR public.current_user_role() = 'admin')
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.exams e
+      WHERE e.id = exam_id AND (public.is_class_teacher(e.class_id) OR public.current_user_role() = 'admin')
     )
   );
 
@@ -332,7 +379,7 @@ CREATE POLICY "Students can read own attempts; Teachers can read all attempts"
     student_id = auth.uid()
     OR EXISTS (
       SELECT 1 FROM public.exams e
-      WHERE e.id = exam_id AND public.is_class_teacher(e.class_id)
+      WHERE e.id = exam_id AND (public.is_class_teacher(e.class_id) OR public.current_user_role() = 'admin')
     )
   );
 
@@ -341,10 +388,23 @@ CREATE POLICY "Students can submit exam attempt"
   TO authenticated
   WITH CHECK (student_id = auth.uid());
 
-CREATE POLICY "Students can update own ongoing attempt"
+CREATE POLICY "Students update own attempt; Teachers and admins manage attempts"
   ON public.exam_attempts FOR UPDATE
   TO authenticated
-  USING (student_id = auth.uid());
+  USING (
+    student_id = auth.uid()
+    OR EXISTS (
+      SELECT 1 FROM public.exams e
+      WHERE e.id = exam_id AND (public.is_class_teacher(e.class_id) OR public.current_user_role() = 'admin')
+    )
+  )
+  WITH CHECK (
+    student_id = auth.uid()
+    OR EXISTS (
+      SELECT 1 FROM public.exams e
+      WHERE e.id = exam_id AND (public.is_class_teacher(e.class_id) OR public.current_user_role() = 'admin')
+    )
+  );
 
 -- ============================================================================
 -- FILE UPLOADS METADATA POLICIES (Phase 5)

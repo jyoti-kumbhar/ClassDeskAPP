@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { Bell, Plus, CalendarClock } from 'lucide-react-native';
+import { View, Text } from 'react-native';
+import { Bell, Plus } from 'lucide-react-native';
 import { Notice, ClassItem } from '../../../types';
-import { fmtDateTime, uid } from '../../../services/dataStore';
-import { lightColors, darkColors, radius, spacing, typography, shadows } from '../../../theme';
+import { fmtDateTime, isFuture } from '../../../services/dataStore';
+import { lightColors, darkColors, spacing } from '../../../theme';
 import { Card } from '../../../components/common/Card';
 import { Button } from '../../../components/common/Button';
 import { Modal } from '../../../components/common/Modal';
@@ -88,11 +88,6 @@ export const NoticesTab: React.FC<NoticesTabProps> = ({
       });
       setShowAddModal(false);
     }
-  };
-
-  const isFuture = (iso?: string | null) => {
-    if (!iso) return false;
-    return new Date(iso).getTime() > Date.now();
   };
 
   // Filter notices for students and search query

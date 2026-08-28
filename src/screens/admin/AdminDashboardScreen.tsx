@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { BookOpen, GraduationCap, Users, Brain } from 'lucide-react-native';
 import { AppDatabase } from '../../services/dataStore';
-import { lightColors, darkColors, radius, spacing, typography } from '../../theme';
+import { lightColors, darkColors, radius, spacing } from '../../theme';
 import { Card, StatCard } from '../../components/common/Card';
 import { CodeChip } from '../../components/common/CodeChip';
 

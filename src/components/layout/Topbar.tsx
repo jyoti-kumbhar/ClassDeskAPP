@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Menu, Sun, Moon } from 'lucide-react-native';
 import { Profile } from '../../types';
+import { getInitials } from '../../services/dataStore';
 import { lightColors, darkColors, radius, spacing, typography } from '../../theme';
 
 interface TopbarProps {
@@ -22,13 +23,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   onToggleTheme,
 }) => {
   const colors = isDark ? darkColors : lightColors;
-
-  const initials = user.name
-    .split(' ')
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  const initials = getInitials(user.name);
 
   return (
     <View

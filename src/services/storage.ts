@@ -1,7 +1,7 @@
 import { supabase, isLiveSupabaseConfigured } from '../config/supabase';
 import { FileUploadMetadata } from '../types';
 import * as DocumentPicker from 'expo-document-picker';
-import { Platform } from 'react-native';
+import { Platform, Linking } from 'react-native';
 
 const BUCKET_NAME = 'classdesk-files';
 export const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -65,17 +65,54 @@ export const validateFile = (file: PickedFile): { valid: boolean; error?: string
   return { valid: true };
 };
 
-// 3. Generate safe storage path
+// 3. Generate safe storage path with path traversal protection
 export const generateSafeStoragePath = (
   userId: string,
   classId: string | null | undefined,
   fileName: string
 ): string => {
-  const sanitized = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+  // Strip any path traversal characters, directory separators, and control characters
+  const baseName = fileName.split(/[\\/]/).pop() || 'file';
+  const sanitized = baseName
+    .replace(/\0/g, '')
+    .replace(/^(\.\.)+/, '')
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    .replace(/^\.+/, '');
+  const cleanName = sanitized || 'file';
   const timestamp = Date.now();
   const randomSuffix = Math.random().toString(36).substring(2, 7);
-  const targetClass = classId || 'general';
-  return `${userId}/${targetClass}/${timestamp}_${randomSuffix}_${sanitized}`;
+  const cleanUserId = userId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const cleanClassId = (classId || 'general').replace(/[^a-zA-Z0-9_-]/g, '_');
+  return `${cleanUserId}/${cleanClassId}/${timestamp}_${randomSuffix}_${cleanName}`;
+};
+
+// 4. Safe URL opener that validates protocols (blocks javascript:, data:, file:)
+export const safeOpenUrl = (rawUrl?: string): boolean => {
+  if (!rawUrl) return false;
+  let url = rawUrl.trim();
+  if (!url) return false;
+
+  // Prepend https:// if protocol is missing and it's a domain-style link
+  if (!/^https?:\/\//i.test(url)) {
+    if (/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/.*)?$/i.test(url)) {
+      url = `https://${url}`;
+    } else {
+      return false; // Reject unsafe protocols
+    }
+  }
+
+  // Strictly verify protocol is http or https
+  if (!/^https?:\/\//i.test(url)) {
+    return false;
+  }
+
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    const win = window.open(url, '_blank', 'noopener,noreferrer');
+    if (win) win.opener = null;
+  } else {
+    Linking.openURL(url).catch(() => {});
+  }
+  return true;
 };
 
 // 4. Upload file to Supabase Storage and record metadata

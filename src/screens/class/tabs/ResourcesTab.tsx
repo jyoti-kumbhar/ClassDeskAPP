@@ -1,20 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Linking, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import {
   Folder,
   Plus,
   Tag,
   ExternalLink,
   Trash2,
-  Filter,
-  Youtube,
-  Globe,
-  FileText,
-  Paperclip,
 } from 'lucide-react-native';
 import { Resource, ResourceLink, ClassItem } from '../../../types';
-import { fmtDate, uid } from '../../../services/dataStore';
-import { lightColors, darkColors, radius, spacing, typography, shadows } from '../../../theme';
+import { fmtDate, isFuture, uid } from '../../../services/dataStore';
+import { lightColors, darkColors, radius, spacing } from '../../../theme';
 import { Card } from '../../../components/common/Card';
 import { Button } from '../../../components/common/Button';
 import { Modal } from '../../../components/common/Modal';
@@ -24,7 +19,8 @@ import { RowActions } from '../../../components/common/RowActions';
 import { ScheduleField } from '../../../components/common/ScheduleField';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { SearchBar } from '../../../components/common/SearchBar';
-import { FileUploadButton, FileAttachmentItem } from '../../../components/common/FileUploadButton';
+import { FileUploadButton } from '../../../components/common/FileUploadButton';
+import { safeOpenUrl } from '../../../services/storage';
 
 interface ResourcesTabProps {
   cls: ClassItem;
@@ -67,11 +63,6 @@ export const ResourcesTab: React.FC<ResourcesTabProps> = ({
   const [links, setLinks] = useState<ResourceLink[]>([]);
   const [newLabelInput, setNewLabelInput] = useState('');
   const [formError, setFormError] = useState('');
-
-  const isFuture = (iso?: string | null) => {
-    if (!iso) return false;
-    return new Date(iso).getTime() > Date.now();
-  };
 
   const openAdd = () => {
     setTitle('');
@@ -145,11 +136,7 @@ export const ResourcesTab: React.FC<ResourcesTabProps> = ({
   };
 
   const openUrl = (url: string) => {
-    if (Platform.OS === 'web') {
-      window.open(url, '_blank');
-    } else {
-      Linking.openURL(url).catch(() => {});
-    }
+    safeOpenUrl(url);
   };
 
   // Filtered list by class, scheduled date, label, and search query

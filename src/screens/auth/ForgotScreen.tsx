@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { KeyRound, ArrowLeft } from 'lucide-react-native';
-import { lightColors, darkColors, radius, spacing, typography, shadows } from '../../theme';
+import { lightColors, darkColors, radius, spacing, shadows } from '../../theme';
 import { Field, Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 

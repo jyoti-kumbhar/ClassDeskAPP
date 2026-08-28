@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { BookOpen, Plus, ChevronRight, User } from 'lucide-react-native';
 import { ClassItem, Profile } from '../../types';
-import { lightColors, darkColors, radius, spacing, typography, shadows } from '../../theme';
+import { lightColors, darkColors, radius, spacing, shadows } from '../../theme';
 import { Modal } from '../../components/common/Modal';
 import { Field, Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';

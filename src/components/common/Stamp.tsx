@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ViewStyle, TextStyle } from 'react-native';
+import { View, Text, ViewStyle } from 'react-native';
 import { lightColors, darkColors, radius, spacing } from '../../theme';
 
 export type StampTone = 'neutral' | 'green' | 'amber' | 'red' | 'brand';

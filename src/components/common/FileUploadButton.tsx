@@ -3,16 +3,12 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ActivityIndicator,
-  Linking,
-  Platform,
-  StyleSheet,
   ViewStyle,
 } from 'react-native';
-import { UploadCloud, File, FileText, Image as ImageIcon, Trash2, ExternalLink, Download } from 'lucide-react-native';
-import { pickDocument, validateFile, uploadFileToStorage, PickedFile } from '../../services/storage';
+import { UploadCloud, File, FileText, Image as ImageIcon, Trash2, ExternalLink } from 'lucide-react-native';
+import { pickDocument, validateFile, uploadFileToStorage, safeOpenUrl } from '../../services/storage';
 import { FileUploadMetadata } from '../../types';
-import { lightColors, darkColors, radius, spacing, typography } from '../../theme';
+import { lightColors, darkColors, radius, spacing } from '../../theme';
 import { Button } from './Button';
 
 interface FileUploadButtonProps {
@@ -112,13 +108,7 @@ export const FileAttachmentItem: React.FC<FileAttachmentItemProps> = ({
   const FileIcon = getFileIcon();
 
   const handleOpen = () => {
-    if (url) {
-      if (Platform.OS === 'web') {
-        window.open(url, '_blank');
-      } else {
-        Linking.openURL(url).catch(() => {});
-      }
-    }
+    safeOpenUrl(url);
   };
 
   return (

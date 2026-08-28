@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { BookOpen, UserX } from 'lucide-react-native';
 import { AppDatabase } from '../../services/dataStore';
-import { lightColors, darkColors, radius, spacing, typography } from '../../theme';
+import { lightColors, darkColors, radius, spacing } from '../../theme';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { CodeChip } from '../../components/common/CodeChip';

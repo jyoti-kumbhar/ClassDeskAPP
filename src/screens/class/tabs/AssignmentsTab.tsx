@@ -1,13 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Linking, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import {
   ClipboardCheck,
   Plus,
-  Calendar,
   Tag,
   ExternalLink,
   Trash2,
-  CheckCircle2,
   FileText,
   Upload,
   Link as LinkIcon,
@@ -21,7 +19,7 @@ import {
   Profile,
 } from '../../../types';
 import { fmtDateTime, isPast, isFuture, uid } from '../../../services/dataStore';
-import { lightColors, darkColors, radius, spacing, typography, shadows } from '../../../theme';
+import { lightColors, darkColors, radius, spacing } from '../../../theme';
 import { Card } from '../../../components/common/Card';
 import { Button } from '../../../components/common/Button';
 import { Modal } from '../../../components/common/Modal';
@@ -32,6 +30,7 @@ import { ScheduleField } from '../../../components/common/ScheduleField';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { SearchBar } from '../../../components/common/SearchBar';
 import { FileUploadButton, FileAttachmentItem } from '../../../components/common/FileUploadButton';
+import { safeOpenUrl } from '../../../services/storage';
 
 interface AssignmentsTabProps {
   cls: ClassItem;
@@ -171,12 +170,7 @@ export const AssignmentsTab: React.FC<AssignmentsTabProps> = ({
   };
 
   const openUrl = (url?: string) => {
-    if (!url) return;
-    if (Platform.OS === 'web') {
-      window.open(url, '_blank');
-    } else {
-      Linking.openURL(url).catch(() => {});
-    }
+    safeOpenUrl(url);
   };
 
   const getStatusTone = (status: SubmissionStatus | 'Overdue' | 'Not submitted'): StampTone => {

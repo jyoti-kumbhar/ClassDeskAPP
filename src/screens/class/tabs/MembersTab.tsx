@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text } from 'react-native';
 import { Users, Trash2, User } from 'lucide-react-native';
 import { ClassItem, Profile } from '../../../types';
-import { lightColors, darkColors, radius, spacing, typography } from '../../../theme';
+import { lightColors, darkColors, radius, spacing } from '../../../theme';
 import { Card } from '../../../components/common/Card';
 import { Button } from '../../../components/common/Button';
 import { EmptyState } from '../../../components/common/EmptyState';

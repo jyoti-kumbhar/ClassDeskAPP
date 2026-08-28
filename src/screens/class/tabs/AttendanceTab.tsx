@@ -5,16 +5,13 @@ import {
   Check,
   Download,
   AlertTriangle,
-  Clock,
-  BookOpen,
-  Plus,
 } from 'lucide-react-native';
 import { AttendanceRecord, AttendanceStatus, ClassItem, Profile } from '../../../types';
-import { fmtDate, fmtDateShort, uid } from '../../../services/dataStore';
-import { lightColors, darkColors, radius, spacing, typography, shadows } from '../../../theme';
+import { fmtDate } from '../../../services/dataStore';
+import { lightColors, darkColors, radius, spacing } from '../../../theme';
 import { Card } from '../../../components/common/Card';
 import { Button } from '../../../components/common/Button';
-import { Input, Field } from '../../../components/common/Input';
+import { Input } from '../../../components/common/Input';
 import { Stamp, StampTone } from '../../../components/common/Stamp';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { SearchBar } from '../../../components/common/SearchBar';

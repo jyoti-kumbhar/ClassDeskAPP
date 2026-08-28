@@ -5,9 +5,6 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
-  Dimensions,
-  Platform,
   TouchableWithoutFeedback,
 } from 'react-native';
 import { X } from 'lucide-react-native';

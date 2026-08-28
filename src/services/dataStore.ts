@@ -82,6 +82,17 @@ export const fmtClock = (iso: string) => {
   });
 };
 
+export const getInitials = (name?: string): string => {
+  if (!name) return 'U';
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+};
+
 export interface AppDatabase {
   institute: Institute;
   users: Profile[];

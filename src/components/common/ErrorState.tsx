@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ViewStyle } from 'react-native';
 import { AlertTriangle, RefreshCw } from 'lucide-react-native';
-import { lightColors, darkColors, spacing, radius } from '../../theme';
+import { lightColors, darkColors, spacing } from '../../theme';
 import { Button } from './Button';
 
 interface ErrorStateProps {
