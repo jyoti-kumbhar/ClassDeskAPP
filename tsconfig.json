@@ -3,11 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
+    "noEmit": true
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
-  "exclude": ["node_modules", "ClassDesk (2).jsx", "dist"]
+  "include": ["src/**/*", "App.tsx"],
+  "exclude": ["node_modules", "dist", ".expo"]
 }

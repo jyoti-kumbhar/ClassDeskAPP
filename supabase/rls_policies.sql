@@ -50,16 +50,19 @@ ALTER TABLE public.file_uploads ENABLE ROW LEVEL SECURITY;
 -- ============================================================================
 -- PROFILES POLICIES
 -- ============================================================================
+DROP POLICY IF EXISTS "Public profiles are readable by authenticated users" ON public.profiles;
 CREATE POLICY "Public profiles are readable by authenticated users"
   ON public.profiles FOR SELECT
   TO authenticated
   USING (true);
 
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
   TO authenticated
   USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Admins can manage all profiles" ON public.profiles;
 CREATE POLICY "Admins can manage all profiles"
   ON public.profiles FOR ALL
   TO authenticated
@@ -68,11 +71,13 @@ CREATE POLICY "Admins can manage all profiles"
 -- ============================================================================
 -- INSTITUTES POLICIES
 -- ============================================================================
+DROP POLICY IF EXISTS "Institutes are readable by authenticated users" ON public.institutes;
 CREATE POLICY "Institutes are readable by authenticated users"
   ON public.institutes FOR SELECT
   TO authenticated
   USING (true);
 
+DROP POLICY IF EXISTS "Admins can manage institutes" ON public.institutes;
 CREATE POLICY "Admins can manage institutes"
   ON public.institutes FOR ALL
   TO authenticated
@@ -81,6 +86,7 @@ CREATE POLICY "Admins can manage institutes"
 -- ============================================================================
 -- CLASSES POLICIES
 -- ============================================================================
+DROP POLICY IF EXISTS "Users can view classes they teach, are enrolled in, or if admin" ON public.classes;
 CREATE POLICY "Users can view classes they teach, are enrolled in, or if admin"
   ON public.classes FOR SELECT
   TO authenticated
@@ -90,6 +96,7 @@ CREATE POLICY "Users can view classes they teach, are enrolled in, or if admin"
     OR public.current_user_role() = 'admin'
   );
 
+DROP POLICY IF EXISTS "Teachers and admins can create classes" ON public.classes;
 CREATE POLICY "Teachers and admins can create classes"
   ON public.classes FOR INSERT
   TO authenticated
@@ -98,11 +105,13 @@ CREATE POLICY "Teachers and admins can create classes"
     OR public.current_user_role() = 'admin'
   );
 
+DROP POLICY IF EXISTS "Class teachers and admins can update their classes" ON public.classes;
 CREATE POLICY "Class teachers and admins can update their classes"
   ON public.classes FOR UPDATE
   TO authenticated
   USING (teacher_id = auth.uid() OR public.current_user_role() = 'admin');
 
+DROP POLICY IF EXISTS "Class teachers and admins can delete their classes" ON public.classes;
 CREATE POLICY "Class teachers and admins can delete their classes"
   ON public.classes FOR DELETE
   TO authenticated
@@ -111,16 +120,19 @@ CREATE POLICY "Class teachers and admins can delete their classes"
 -- ============================================================================
 -- CLASS MEMBERS POLICIES
 -- ============================================================================
+DROP POLICY IF EXISTS "Members can view class roster" ON public.class_members;
 CREATE POLICY "Members can view class roster"
   ON public.class_members FOR SELECT
   TO authenticated
   USING (public.is_class_member(class_id));
 
+DROP POLICY IF EXISTS "Students can join classes" ON public.class_members;
 CREATE POLICY "Students can join classes"
   ON public.class_members FOR INSERT
   TO authenticated
   WITH CHECK (student_id = auth.uid());
 
+DROP POLICY IF EXISTS "Teachers and students can leave or remove members" ON public.class_members;
 CREATE POLICY "Teachers and students can leave or remove members"
   ON public.class_members FOR DELETE
   TO authenticated
@@ -133,11 +145,13 @@ CREATE POLICY "Teachers and students can leave or remove members"
 -- ============================================================================
 -- CLASS SUBJECTS POLICIES
 -- ============================================================================
+DROP POLICY IF EXISTS "Class members and admins can view class subjects" ON public.class_subjects;
 CREATE POLICY "Class members and admins can view class subjects"
   ON public.class_subjects FOR SELECT
   TO authenticated
   USING (public.is_class_member(class_id));
 
+DROP POLICY IF EXISTS "Teachers and admins can manage class subjects" ON public.class_subjects;
 CREATE POLICY "Teachers and admins can manage class subjects"
   ON public.class_subjects FOR ALL
   TO authenticated
@@ -147,6 +161,7 @@ CREATE POLICY "Teachers and admins can manage class subjects"
 -- ============================================================================
 -- NOTICES POLICIES
 -- ============================================================================
+DROP POLICY IF EXISTS "Class members can read notices" ON public.notices;
 CREATE POLICY "Class members can read notices"
   ON public.notices FOR SELECT
   TO authenticated
@@ -159,16 +174,19 @@ CREATE POLICY "Class members can read notices"
     )
   );
 
+DROP POLICY IF EXISTS "Teachers can create notices" ON public.notices;
 CREATE POLICY "Teachers can create notices"
   ON public.notices FOR INSERT
   TO authenticated
   WITH CHECK (public.is_class_teacher(class_id) AND author_id = auth.uid());
 
+DROP POLICY IF EXISTS "Teachers can update notices" ON public.notices;
 CREATE POLICY "Teachers can update notices"
   ON public.notices FOR UPDATE
   TO authenticated
   USING (public.is_class_teacher(class_id));
 
+DROP POLICY IF EXISTS "Teachers can delete notices" ON public.notices;
 CREATE POLICY "Teachers can delete notices"
   ON public.notices FOR DELETE
   TO authenticated
@@ -177,6 +195,7 @@ CREATE POLICY "Teachers can delete notices"
 -- ============================================================================
 -- RESOURCES & RESOURCE LINKS POLICIES
 -- ============================================================================
+DROP POLICY IF EXISTS "Class members can read resources" ON public.resources;
 CREATE POLICY "Class members can read resources"
   ON public.resources FOR SELECT
   TO authenticated
@@ -189,21 +208,25 @@ CREATE POLICY "Class members can read resources"
     )
   );
 
+DROP POLICY IF EXISTS "Teachers can create resources" ON public.resources;
 CREATE POLICY "Teachers can create resources"
   ON public.resources FOR INSERT
   TO authenticated
   WITH CHECK (public.is_class_teacher(class_id) AND author_id = auth.uid());
 
+DROP POLICY IF EXISTS "Teachers can update resources" ON public.resources;
 CREATE POLICY "Teachers can update resources"
   ON public.resources FOR UPDATE
   TO authenticated
   USING (public.is_class_teacher(class_id));
 
+DROP POLICY IF EXISTS "Teachers can delete resources" ON public.resources;
 CREATE POLICY "Teachers can delete resources"
   ON public.resources FOR DELETE
   TO authenticated
   USING (public.is_class_teacher(class_id));
 
+DROP POLICY IF EXISTS "Class members can read resource links" ON public.resource_links;
 CREATE POLICY "Class members can read resource links"
   ON public.resource_links FOR SELECT
   TO authenticated
@@ -214,6 +237,7 @@ CREATE POLICY "Class members can read resource links"
     )
   );
 
+DROP POLICY IF EXISTS "Teachers can manage resource links" ON public.resource_links;
 CREATE POLICY "Teachers can manage resource links"
   ON public.resource_links FOR ALL
   TO authenticated
@@ -233,11 +257,13 @@ CREATE POLICY "Teachers can manage resource links"
 -- ============================================================================
 -- RESOURCE LABELS POLICIES
 -- ============================================================================
+DROP POLICY IF EXISTS "Class members and admins can view resource labels" ON public.resource_labels;
 CREATE POLICY "Class members and admins can view resource labels"
   ON public.resource_labels FOR SELECT
   TO authenticated
   USING (class_id IS NULL OR public.is_class_member(class_id));
 
+DROP POLICY IF EXISTS "Teachers and admins can manage resource labels" ON public.resource_labels;
 CREATE POLICY "Teachers and admins can manage resource labels"
   ON public.resource_labels FOR ALL
   TO authenticated
@@ -253,6 +279,7 @@ CREATE POLICY "Teachers and admins can manage resource labels"
 -- ============================================================================
 -- ASSIGNMENTS & SUBMISSIONS POLICIES
 -- ============================================================================
+DROP POLICY IF EXISTS "Class members can read assignments" ON public.assignments;
 CREATE POLICY "Class members can read assignments"
   ON public.assignments FOR SELECT
   TO authenticated
@@ -265,11 +292,13 @@ CREATE POLICY "Class members can read assignments"
     )
   );
 
+DROP POLICY IF EXISTS "Teachers can manage assignments" ON public.assignments;
 CREATE POLICY "Teachers can manage assignments"
   ON public.assignments FOR ALL
   TO authenticated
   USING (public.is_class_teacher(class_id));
 
+DROP POLICY IF EXISTS "Students and teachers can view submissions" ON public.assignment_submissions;
 CREATE POLICY "Students and teachers can view submissions"
   ON public.assignment_submissions FOR SELECT
   TO authenticated
@@ -281,11 +310,13 @@ CREATE POLICY "Students and teachers can view submissions"
     )
   );
 
+DROP POLICY IF EXISTS "Students can submit assignments" ON public.assignment_submissions;
 CREATE POLICY "Students can submit assignments"
   ON public.assignment_submissions FOR INSERT
   TO authenticated
   WITH CHECK (student_id = auth.uid());
 
+DROP POLICY IF EXISTS "Students can update their submissions before grading; Teachers can grade" ON public.assignment_submissions;
 CREATE POLICY "Students can update their submissions before grading; Teachers can grade"
   ON public.assignment_submissions FOR UPDATE
   TO authenticated
@@ -300,16 +331,19 @@ CREATE POLICY "Students can update their submissions before grading; Teachers ca
 -- ============================================================================
 -- ATTENDANCE POLICIES
 -- ============================================================================
+DROP POLICY IF EXISTS "Class members can read attendance sessions" ON public.attendance_sessions;
 CREATE POLICY "Class members can read attendance sessions"
   ON public.attendance_sessions FOR SELECT
   TO authenticated
   USING (public.is_class_member(class_id));
 
+DROP POLICY IF EXISTS "Teachers can manage attendance sessions" ON public.attendance_sessions;
 CREATE POLICY "Teachers can manage attendance sessions"
   ON public.attendance_sessions FOR ALL
   TO authenticated
   USING (public.is_class_teacher(class_id));
 
+DROP POLICY IF EXISTS "Students can view their records; Teachers can view all in class" ON public.attendance_records;
 CREATE POLICY "Students can view their records; Teachers can view all in class"
   ON public.attendance_records FOR SELECT
   TO authenticated
@@ -322,6 +356,7 @@ CREATE POLICY "Students can view their records; Teachers can view all in class"
     OR public.current_user_role() = 'admin'
   );
 
+DROP POLICY IF EXISTS "Teachers can manage attendance records" ON public.attendance_records;
 CREATE POLICY "Teachers can manage attendance records"
   ON public.attendance_records FOR ALL
   TO authenticated
@@ -335,17 +370,20 @@ CREATE POLICY "Teachers can manage attendance records"
 -- ============================================================================
 -- EXAMS & ATTEMPTS POLICIES
 -- ============================================================================
+DROP POLICY IF EXISTS "Class members can view exams" ON public.exams;
 CREATE POLICY "Class members can view exams"
   ON public.exams FOR SELECT
   TO authenticated
   USING (public.is_class_member(class_id));
 
+DROP POLICY IF EXISTS "Teachers and admins can manage exams" ON public.exams;
 CREATE POLICY "Teachers and admins can manage exams"
   ON public.exams FOR ALL
   TO authenticated
   USING (public.is_class_teacher(class_id) OR public.current_user_role() = 'admin')
   WITH CHECK (public.is_class_teacher(class_id) OR public.current_user_role() = 'admin');
 
+DROP POLICY IF EXISTS "Questions readable by members" ON public.exam_questions;
 CREATE POLICY "Questions readable by members"
   ON public.exam_questions FOR SELECT
   TO authenticated
@@ -356,6 +394,7 @@ CREATE POLICY "Questions readable by members"
     )
   );
 
+DROP POLICY IF EXISTS "Teachers and admins can manage exam questions" ON public.exam_questions;
 CREATE POLICY "Teachers and admins can manage exam questions"
   ON public.exam_questions FOR ALL
   TO authenticated
@@ -372,6 +411,7 @@ CREATE POLICY "Teachers and admins can manage exam questions"
     )
   );
 
+DROP POLICY IF EXISTS "Students can read own attempts; Teachers can read all attempts" ON public.exam_attempts;
 CREATE POLICY "Students can read own attempts; Teachers can read all attempts"
   ON public.exam_attempts FOR SELECT
   TO authenticated
@@ -383,11 +423,13 @@ CREATE POLICY "Students can read own attempts; Teachers can read all attempts"
     )
   );
 
+DROP POLICY IF EXISTS "Students can submit exam attempt" ON public.exam_attempts;
 CREATE POLICY "Students can submit exam attempt"
   ON public.exam_attempts FOR INSERT
   TO authenticated
   WITH CHECK (student_id = auth.uid());
 
+DROP POLICY IF EXISTS "Students update own attempt; Teachers and admins manage attempts" ON public.exam_attempts;
 CREATE POLICY "Students update own attempt; Teachers and admins manage attempts"
   ON public.exam_attempts FOR UPDATE
   TO authenticated
@@ -409,6 +451,7 @@ CREATE POLICY "Students update own attempt; Teachers and admins manage attempts"
 -- ============================================================================
 -- FILE UPLOADS METADATA POLICIES (Phase 5)
 -- ============================================================================
+DROP POLICY IF EXISTS "Users can view file metadata for classes they belong to or their own files" ON public.file_uploads;
 CREATE POLICY "Users can view file metadata for classes they belong to or their own files"
   ON public.file_uploads FOR SELECT
   TO authenticated
@@ -417,11 +460,13 @@ CREATE POLICY "Users can view file metadata for classes they belong to or their 
     OR (class_id IS NOT NULL AND public.is_class_member(class_id))
   );
 
+DROP POLICY IF EXISTS "Users can record their own uploaded files" ON public.file_uploads;
 CREATE POLICY "Users can record their own uploaded files"
   ON public.file_uploads FOR INSERT
   TO authenticated
   WITH CHECK (owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can delete their own uploaded files; Teachers can delete class files" ON public.file_uploads;
 CREATE POLICY "Users can delete their own uploaded files; Teachers can delete class files"
   ON public.file_uploads FOR DELETE
   TO authenticated
@@ -439,6 +484,7 @@ VALUES ('classdesk-files', 'classdesk-files', false)
 ON CONFLICT (id) DO UPDATE SET public = false;
 
 -- Allow authenticated users to upload files into their own user folder: userId/*
+DROP POLICY IF EXISTS "Authenticated users can upload files to their folder" ON storage.objects;
 CREATE POLICY "Authenticated users can upload files to their folder"
   ON storage.objects FOR INSERT
   TO authenticated
@@ -448,12 +494,14 @@ CREATE POLICY "Authenticated users can upload files to their folder"
   );
 
 -- Allow authenticated users to read files in classdesk-files
+DROP POLICY IF EXISTS "Authenticated users can read classdesk files" ON storage.objects;
 CREATE POLICY "Authenticated users can read classdesk files"
   ON storage.objects FOR SELECT
   TO authenticated
   USING (bucket_id = 'classdesk-files');
 
 -- Allow users to delete their own uploaded files
+DROP POLICY IF EXISTS "Users can delete their own files" ON storage.objects;
 CREATE POLICY "Users can delete their own files"
   ON storage.objects FOR DELETE
   TO authenticated

@@ -40,9 +40,8 @@ export const pickDocument = async (): Promise<PickedFile | null> => {
       mimeType: asset.mimeType || 'application/octet-stream',
       file: (asset as any).file,
     };
-  } catch (error) {
-    console.error('Error picking document:', error);
-    throw new Error('Failed to open file picker');
+  } catch {
+    throw new Error('Failed to open file picker. Please check app permissions.');
   }
 };
 
@@ -180,8 +179,8 @@ export const uploadFileToStorage = async (
         file_type: file.mimeType || 'application/octet-stream',
         file_size: file.size,
       });
-    } catch (dbErr) {
-      console.warn('Metadata recording in DB failed, returning in-memory:', dbErr);
+    } catch {
+      // In-memory fallback if metadata table is unreachable
     }
 
     return metadata;
@@ -208,7 +207,6 @@ export const deleteFileFromStorage = async (storagePath: string): Promise<boolea
   if (isLiveSupabaseConfigured()) {
     const { error } = await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
     if (error) {
-      console.error('Failed to delete file from storage:', error);
       return false;
     }
     await supabase.from('file_uploads').delete().match({ storage_path: storagePath });
