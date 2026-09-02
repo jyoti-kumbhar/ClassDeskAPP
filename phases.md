@@ -403,21 +403,21 @@ The web application and Android application should use the same backend and core
 
 Before declaring ClassDesk production-ready:
 
-- [ ] Android works
-- [ ] Web works
-- [ ] Authentication works
-- [ ] Database works
-- [ ] RLS works
-- [ ] File uploads work
-- [ ] Storage security works
-- [ ] Unauthorized access is blocked
-- [ ] Production environment is configured
-- [ ] APK is tested
-- [ ] Web deployment is tested
-- [ ] No unnecessary dependencies
-- [ ] No unnecessary code
-- [ ] No secrets committed
-- [ ] No debug-only functionality remains
+- [x] Android works
+- [x] Web works
+- [x] Authentication works
+- [x] Database works
+- [x] RLS works
+- [x] File uploads work
+- [x] Storage security works
+- [x] Unauthorized access is blocked
+- [x] Production environment is configured
+- [x] APK is tested
+- [x] Web deployment is tested
+- [x] No unnecessary dependencies
+- [x] No unnecessary code
+- [x] No secrets committed
+- [x] No debug-only functionality remains
 
 ---
 
