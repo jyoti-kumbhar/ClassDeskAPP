@@ -55,20 +55,14 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
     >
       <View
         style={{
-          flexDirection: 'row',
           alignItems: 'center',
-          gap: spacing.md,
+          justifyContent: 'center',
           marginBottom: spacing.xl,
           maxWidth: 400,
           width: '100%',
         }}
       >
         <BrandLogo size="lg" showSubtitle={false} isDark={isDark} />
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={{ fontSize: 12.5, color: colors.inkSoft, marginTop: 2 }}>
-            The staff room, roll call and gradebook — in one place.
-          </Text>
-        </View>
       </View>
 
       <View

@@ -35,6 +35,12 @@
     },
     "plugins": [
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5379697f-eafa-4016-bb89-335e8bf0bce2"
+      }
+    },
+    "owner": "kumbharjyoti"
   }
 }
