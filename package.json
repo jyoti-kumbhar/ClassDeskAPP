@@ -10,8 +10,8 @@
     "build:web": "expo export -p web && node scripts/copy_web_assets.js",
     "build:apk": "eas build --platform android --profile preview",
     "build:android": "eas build --platform android --profile production",
-    "test": "node --test tests/phase9_tests.mjs tests/phase10_production_tests.mjs tests/phase11_release_tests.mjs tests/phase12_phase13_tests.mjs",
-    "test:prod": "node --test tests/phase10_production_tests.mjs tests/phase11_release_tests.mjs tests/phase12_phase13_tests.mjs",
+    "test": "node --test tests/app_tests.mjs",
+    "test:prod": "node --test tests/app_tests.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -24,7 +24,9 @@
     "expo-constants": "~17.0.5",
     "expo-document-picker": "~13.0.3",
     "expo-file-system": "~18.0.7",
+    "expo-splash-screen": "~0.29.24",
     "expo-status-bar": "~2.0.1",
+    "expo-system-ui": "~4.0.9",
     "lucide-react-native": "^0.475.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   SafeAreaView,
   View,
@@ -7,6 +7,11 @@ import {
   useWindowDimensions,
   Platform,
 } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
+import { ErrorBoundary } from './src/components/common/ErrorBoundary';
+
+// Prevent native splash screen from hiding before initial render
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Global Web input outline & favicon setup
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
@@ -86,9 +91,14 @@ import { StudentClassesScreen } from './src/screens/student/StudentClassesScreen
 import { ClassDetailScreen } from './src/screens/class/ClassDetailScreen';
 import { ProfileScreen } from './src/screens/profile/ProfileScreen';
 
-export default function App() {
+function ClassDeskApp() {
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
+
+  useEffect(() => {
+    // Hide native splash screen once UI is mounted
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   // Global Theme & DB State
   const [isDark, setIsDark] = useState(false);
@@ -835,6 +845,14 @@ export default function App() {
 
       <Toast toast={toast} isDark={isDark} />
     </SafeAreaView>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <ClassDeskApp />
+    </ErrorBoundary>
   );
 }
 
