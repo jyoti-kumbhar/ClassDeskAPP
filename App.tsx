@@ -10,9 +10,6 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { ErrorBoundary } from './src/components/common/ErrorBoundary';
 
-// Prevent native splash screen from hiding before initial render
-SplashScreen.preventAutoHideAsync().catch(() => {});
-
 // Global Web input outline & favicon setup
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
   const styleId = 'classdesk-input-outline-reset';
@@ -96,8 +93,12 @@ function ClassDeskApp() {
   const isMobile = width < 768;
 
   useEffect(() => {
-    // Hide native splash screen once UI is mounted
+    // Explicitly hide native splash screen once UI is mounted
     SplashScreen.hideAsync().catch(() => {});
+    const timer = setTimeout(() => {
+      SplashScreen.hideAsync().catch(() => {});
+    }, 50);
+    return () => clearTimeout(timer);
   }, []);
 
   // Global Theme & DB State
@@ -849,6 +850,10 @@ function ClassDeskApp() {
 }
 
 export default function App() {
+  useEffect(() => {
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
+
   return (
     <ErrorBoundary>
       <ClassDeskApp />
@@ -860,6 +865,7 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     height: '100%',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
   },
   appShell: {
     flex: 1,

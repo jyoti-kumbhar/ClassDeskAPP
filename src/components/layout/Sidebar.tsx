@@ -374,7 +374,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               flexDirection: 'row',
             }}
           >
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+            <TouchableWithoutFeedback onPress={(e) => { e?.stopPropagation?.(); }}>
               <View style={{ height: '100%', ...shadows.lg }}>
                 {renderContent()}
               </View>

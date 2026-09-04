@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Platform, ViewStyle } from 'react-native';
-import { GraduationCap } from 'lucide-react-native';
+import { View, Text, StyleSheet, Platform, ViewStyle, Image } from 'react-native';
 import { lightColors, darkColors, radius, spacing } from '../../theme';
 
 interface BrandLogoProps {
@@ -38,11 +37,18 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
             width: dims.box,
             height: dims.box,
             borderRadius: dims.radius,
-            backgroundColor: colors.brand,
           },
         ]}
       >
-        <GraduationCap size={dims.icon} color="#FFFFFF" strokeWidth={2.4} />
+        <Image
+          source={require('../../../assets/icon.png')}
+          style={{
+            width: dims.box,
+            height: dims.box,
+            borderRadius: dims.radius,
+          }}
+          resizeMode="contain"
+        />
       </View>
 
       {/* Brand Text */}
@@ -92,9 +98,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
     flexShrink: 0,
+    overflow: 'hidden',
     ...Platform.select({
       web: {
-        boxShadow: '0 2px 6px rgba(91, 79, 224, 0.28)',
+        boxShadow: '0 2px 8px rgba(56, 106, 235, 0.28)',
       },
       default: {
         elevation: 2,

@@ -26,7 +26,7 @@ if (fs.existsSync(distDir)) {
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
-    <meta name="theme-color" content="#5B4FE0" />
+    <meta name="theme-color" content="#386AEB" />
 `;
 
     if (!html.includes('href="/favicon.svg"')) {

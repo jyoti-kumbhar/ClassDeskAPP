@@ -46,7 +46,7 @@ export const Modal: React.FC<ModalProps> = ({
             padding: spacing.lg,
           }}
         >
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+          <TouchableWithoutFeedback onPress={(e) => { e?.stopPropagation?.(); }}>
             <View
               style={{
                 backgroundColor: colors.surface,

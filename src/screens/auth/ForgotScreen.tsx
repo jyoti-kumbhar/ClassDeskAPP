@@ -30,6 +30,7 @@ export const ForgotScreen: React.FC<ForgotScreenProps> = ({
 
   return (
     <ScrollView
+      style={{ flex: 1, width: '100%' }}
       contentContainerStyle={{
         flexGrow: 1,
         justifyContent: 'center',

@@ -69,7 +69,7 @@ Perform the following verification steps on the installed APK:
 
 | Test Item | Verification Criteria | Status |
 | :--- | :--- | :--- |
-| **1. Splash & Brand Icons** | App launches with `#5B4FE0` branded splash and adaptive icon | [x] |
+| **1. Splash & Brand Icons** | App launches with `#386AEB` branded splash and adaptive icon | [x] |
 | **2. Auth - Sign In / Sign Up** | Secure authentication works cleanly with Supabase Auth | [x] |
 | **3. Session Persistence** | Closing and reopening the app keeps the user logged in (`AsyncStorage`) | [x] |
 | **4. File Upload & Picker** | Native document picker opens; allows selecting and uploading files up to 25MB | [x] |

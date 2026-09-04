@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 
 interface Props {
   children: ReactNode;
@@ -21,7 +22,14 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    SplashScreen.hideAsync().catch(() => {});
     console.error('Uncaught error caught by ErrorBoundary:', error, errorInfo);
+  }
+
+  public componentDidMount() {
+    if (this.state.hasError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
   }
 
   private handleReset = () => {
@@ -32,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <SafeAreaView style={styles.container}>
-          <StatusBar barStyle="light-content" backgroundColor="#5B4FE0" />
+          <StatusBar barStyle="light-content" backgroundColor="#386AEB" />
           <View style={styles.content}>
             <View style={styles.badge}>
               <Text style={styles.badgeText}>!</Text>
@@ -67,7 +75,7 @@ export class ErrorBoundary extends Component<Props, State> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F6F5FB',
+    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -79,8 +87,8 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#DAD5EF',
-    shadowColor: '#241F3D',
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 10,
@@ -103,13 +111,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#241F3D',
+    color: '#0F172A',
     marginBottom: 8,
     textAlign: 'center',
   },
   message: {
     fontSize: 14,
-    color: '#6B6690',
+    color: '#64748B',
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 20,
@@ -127,7 +135,7 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
   },
   button: {
-    backgroundColor: '#5B4FE0',
+    backgroundColor: '#386AEB',
     paddingVertical: 12,
     paddingHorizontal: 28,
     borderRadius: 10,
