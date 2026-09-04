@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Platform, Modal as RNModal } from 'react-native';
 import {
   Brain,
   Plus,
@@ -17,6 +17,8 @@ import {
   Maximize,
   X,
   Check,
+  Copy,
+  Clipboard,
 } from 'lucide-react-native';
 import {
   Exam,
@@ -88,6 +90,8 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
   const [examEndTime, setExamEndTime] = useState('');
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [formError, setFormError] = useState('');
+  const [copiedPaper, setCopiedPaper] = useState(false);
+  const [copiedQId, setCopiedQId] = useState<string | null>(null);
 
   // Student Exam Mode State
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -95,6 +99,7 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
   const [secondsRemaining, setSecondsRemaining] = useState(0);
   const [warningCount, setWarningCount] = useState(0);
   const [warningFlash, setWarningFlash] = useState<string | null>(null);
+  const [isInFullscreen, setIsInFullscreen] = useState<boolean>(true);
   const examStartTimeRef = useRef<number>(0);
   const violationsRef = useRef<ExamViolation[]>([]);
   const isSubmittedRef = useRef<boolean>(false);
@@ -173,6 +178,99 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
     setQuestions((prev) => prev.filter((q) => q.id !== qId));
   };
 
+  // Teacher helper: duplicate a question
+  const handleDuplicateQuestion = (idx: number) => {
+    const target = questions[idx];
+    if (!target) return;
+    const dup: ExamQuestion = {
+      id: uid('q'),
+      q: target.q,
+      options: [...target.options],
+      correct: target.correct,
+    };
+    const updated = [...questions];
+    updated.splice(idx + 1, 0, dup);
+    setQuestions(updated);
+  };
+
+  // Teacher helper: smart paste into question from clipboard
+  const handlePasteIntoQuestion = async (qId: string) => {
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard?.readText) {
+      try {
+        const raw = await navigator.clipboard.readText();
+        if (!raw || !raw.trim()) return;
+
+        const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        if (lines.length === 0) return;
+
+        const qText = lines[0].replace(/^(q(uestion)?\s*\d*[:.)-]?\s*)/i, '').trim();
+        const optLines = lines.slice(1);
+        const cleanOpts = optLines.map((l) => l.replace(/^([a-d\d][.:)]\s*)/i, '').trim());
+
+        setQuestions((prev) =>
+          prev.map((q) => {
+            if (q.id !== qId) return q;
+            const newOpts = [...q.options];
+            for (let i = 0; i < 4; i++) {
+              if (cleanOpts[i] !== undefined) {
+                newOpts[i] = cleanOpts[i];
+              }
+            }
+            return {
+              ...q,
+              q: qText || q.q,
+              options: newOpts,
+            };
+          })
+        );
+      } catch (e) {}
+    }
+  };
+
+  // Teacher helper: copy entire formatted question paper to clipboard
+  const handleCopyQuestionPaper = (exam: Exam) => {
+    const formatted = [
+      `${exam.title} — Question Paper`,
+      `Class: ${cls.name}`,
+      `Duration: ${exam.duration} mins`,
+      `Total Questions: ${exam.questions.length}`,
+      '',
+      ...exam.questions.map((q, idx) => {
+        return [
+          `Q${idx + 1}. ${q.q}`,
+          ...q.options.map(
+            (opt, oi) =>
+              `   ${String.fromCharCode(65 + oi)}. ${opt}${oi === q.correct ? ' (Correct Answer)' : ''}`
+          ),
+          '',
+        ].join('\n');
+      }),
+    ].join('\n');
+
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(formatted);
+      setCopiedPaper(true);
+      setTimeout(() => setCopiedPaper(false), 2000);
+    }
+  };
+
+  // Teacher helper: copy single question to clipboard
+  const handleCopySingleQuestion = (q: ExamQuestion, idx: number) => {
+    const formatted = [
+      `Q${idx + 1}. ${q.q}`,
+      ...q.options.map(
+        (opt, oi) =>
+          `   ${String.fromCharCode(65 + oi)}. ${opt}${oi === q.correct ? ' (Correct Answer)' : ''}`
+      ),
+    ].join('\n');
+
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(formatted);
+      setCopiedQId(q.id);
+      setTimeout(() => setCopiedQId(null), 2000);
+    }
+  };
+
   const handleSaveExam = () => {
     if (!examTitle.trim()) {
       setFormError('Please enter an exam title.');
@@ -213,21 +311,42 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
     }
   };
 
+  // Helper to re-enter fullscreen and lock the Escape key
+  const reEnterFullscreen = async () => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+        }
+        if ('keyboard' in navigator && typeof (navigator as any).keyboard?.lock === 'function') {
+          await (navigator as any).keyboard.lock(['Escape']);
+        }
+        setIsInFullscreen(true);
+      } catch (e) {
+        // User gesture may be required
+      }
+    }
+  };
+
   // Student Start Exam
-  const handleStartExam = (ex: Exam) => {
+  const handleStartExam = async (ex: Exam) => {
     setTakingExam(ex);
     setCurrentQuestionIndex(0);
     setStudentAnswers(new Array(ex.questions.length).fill(-1));
     setSecondsRemaining(ex.duration * 60);
     setWarningCount(0);
     setWarningFlash(null);
+    setIsInFullscreen(true);
     examStartTimeRef.current = Date.now();
     violationsRef.current = [];
     isSubmittedRef.current = false;
 
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       try {
-        document.documentElement.requestFullscreen().catch(() => {});
+        await document.documentElement.requestFullscreen();
+        if ('keyboard' in navigator && typeof (navigator as any).keyboard?.lock === 'function') {
+          await (navigator as any).keyboard.lock(['Escape']);
+        }
       } catch (e) {}
     }
   };
@@ -238,10 +357,17 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
     if (isSubmittedRef.current || !exam) return;
     isSubmittedRef.current = true;
 
-    if (Platform.OS === 'web' && typeof document !== 'undefined' && document.fullscreenElement) {
-      try {
-        document.exitFullscreen().catch(() => {});
-      } catch (e) {}
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      if ('keyboard' in navigator && typeof (navigator as any).keyboard?.unlock === 'function') {
+        try {
+          (navigator as any).keyboard.unlock();
+        } catch (e) {}
+      }
+      if (document.fullscreenElement) {
+        try {
+          document.exitFullscreen().catch(() => {});
+        } catch (e) {}
+      }
     }
 
     const answers = studentAnswersRef.current;
@@ -288,9 +414,14 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
     return () => clearInterval(timer);
   }, [takingExam]);
 
-  // Anti-Cheat Event Listeners (Tab change, window blur, fullscreen exit)
+  // Anti-Cheat Event Listeners (Tab change, window blur, fullscreen exit, ESC trap, Copy/Paste block)
   useEffect(() => {
     if (!takingExam || Platform.OS !== 'web' || typeof window === 'undefined') return;
+
+    // Lock escape key if in fullscreen
+    if (document.fullscreenElement && 'keyboard' in navigator && typeof (navigator as any).keyboard?.lock === 'function') {
+      (navigator as any).keyboard.lock(['Escape']).catch(() => {});
+    }
 
     const recordViolation = (reason: string) => {
       if (isSubmittedRef.current) return;
@@ -303,7 +434,7 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
       setWarningCount((prev) => {
         const next = prev + 1;
         setWarningFlash(`Warning ${next}/3: ${reason}`);
-        setTimeout(() => setWarningFlash(null), 3000);
+        setTimeout(() => setWarningFlash(null), 3500);
 
         if (next >= 3) {
           finishAttempt(true, next);
@@ -324,18 +455,135 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
 
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
+        setIsInFullscreen(false);
         recordViolation('Exited locked full-screen mode');
+        // Immediately try to bring student back to fullscreen mode
+        document.documentElement
+          .requestFullscreen()
+          .then(() => {
+            setIsInFullscreen(true);
+            if ('keyboard' in navigator && typeof (navigator as any).keyboard?.lock === 'function') {
+              (navigator as any).keyboard.lock(['Escape']).catch(() => {});
+            }
+          })
+          .catch(() => {
+            // Browser requires explicit user gesture; lockdown overlay modal handles it on click or keypress
+          });
+      } else {
+        setIsInFullscreen(true);
+        if ('keyboard' in navigator && typeof (navigator as any).keyboard?.lock === 'function') {
+          (navigator as any).keyboard.lock(['Escape']).catch(() => {});
+        }
       }
+    };
+
+    // Disallow exiting fullscreen via ESC key; disallow clipboard and developer shortcuts
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.code === 'Escape' || e.keyCode === 27) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!document.fullscreenElement) {
+          reEnterFullscreen();
+        }
+        return;
+      }
+
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+      const key = e.key ? e.key.toLowerCase() : '';
+
+      // Block Copy, Paste, Cut, Select-All during exam
+      if (isCtrlOrCmd && (key === 'c' || key === 'v' || key === 'x' || key === 'a')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const action = key === 'c' ? 'Copying' : key === 'v' ? 'Pasting' : key === 'x' ? 'Cutting' : 'Text selection';
+        recordViolation(`Attempted unauthorized clipboard action (${e.ctrlKey ? 'Ctrl' : 'Cmd'}+${key.toUpperCase()})`);
+        setWarningFlash(`${action} is disabled during the exam!`);
+        return;
+      }
+
+      // Block print, save, inspect shortcuts
+      if (
+        (isCtrlOrCmd && (key === 'p' || key === 's' || key === 'u')) ||
+        (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(key)) ||
+        e.key === 'F12'
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        recordViolation(`Used unauthorized shortcut (${e.key})`);
+        setWarningFlash('Browser shortcut is disabled during the exam!');
+        return;
+      }
+    };
+
+    // Disallow copying question or answer content
+    const handleCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      recordViolation('Attempted to copy exam question or answers');
+      setWarningFlash('Copying is prohibited during the exam!');
+    };
+
+    // Disallow cutting content
+    const handleCut = (e: ClipboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      recordViolation('Attempted to cut content during exam');
+      setWarningFlash('Cutting is prohibited during the exam!');
+    };
+
+    // Disallow pasting into exam
+    const handlePaste = (e: ClipboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      recordViolation('Attempted to paste content into exam');
+      setWarningFlash('Pasting is prohibited during the exam!');
+    };
+
+    // Disallow right-click context menu (which has Copy / Paste / Inspect)
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setWarningFlash('Right-click context menu is disabled during the exam.');
+    };
+
+    // Disallow drag and select
+    const handleDragStart = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleSelectStart = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
     };
 
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('blur', handleBlur);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('keydown', handleKeyDown, true);
+    document.addEventListener('copy', handleCopy, true);
+    document.addEventListener('cut', handleCut, true);
+    document.addEventListener('paste', handlePaste, true);
+    document.addEventListener('contextmenu', handleContextMenu, true);
+    document.addEventListener('dragstart', handleDragStart, true);
+    document.addEventListener('selectstart', handleSelectStart, true);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('blur', handleBlur);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('keydown', handleKeyDown, true);
+      document.removeEventListener('copy', handleCopy, true);
+      document.removeEventListener('cut', handleCut, true);
+      document.removeEventListener('paste', handlePaste, true);
+      document.removeEventListener('contextmenu', handleContextMenu, true);
+      document.removeEventListener('dragstart', handleDragStart, true);
+      document.removeEventListener('selectstart', handleSelectStart, true);
+      if ('keyboard' in navigator && typeof (navigator as any).keyboard?.unlock === 'function') {
+        try {
+          (navigator as any).keyboard.unlock();
+        } catch (e) {}
+      }
     };
   }, [takingExam, studentAnswers]);
 
@@ -669,11 +917,55 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
                     <Text style={{ fontSize: 13.5, fontWeight: '700', color: colors.ink }}>
                       Question {qIdx + 1}
                     </Text>
-                    {questions.length > 1 && (
-                      <TouchableOpacity onPress={() => handleRemoveQuestion(q.id)}>
-                        <X size={16} color={colors.danger} />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <TouchableOpacity
+                        onPress={() => handleDuplicateQuestion(qIdx)}
+                        title="Duplicate this question"
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                          paddingVertical: 3,
+                          paddingHorizontal: 7,
+                          borderRadius: radius.sm,
+                          backgroundColor: colors.surface,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                        }}
+                      >
+                        <Copy size={12} color={colors.inkSoft} />
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: colors.inkSoft }}>Duplicate</Text>
                       </TouchableOpacity>
-                    )}
+
+                      {Platform.OS === 'web' && typeof navigator !== 'undefined' && (
+                        <TouchableOpacity
+                          onPress={() => handlePasteIntoQuestion(q.id)}
+                          title="Paste question & answers from clipboard"
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 4,
+                            paddingVertical: 3,
+                            paddingHorizontal: 7,
+                            borderRadius: radius.sm,
+                            backgroundColor: colors.brandTint,
+                          }}
+                        >
+                          <Clipboard size={12} color={colors.brandDark} />
+                          <Text style={{ fontSize: 11, fontWeight: '700', color: colors.brandDark }}>Paste</Text>
+                        </TouchableOpacity>
+                      )}
+
+                      {questions.length > 1 && (
+                        <TouchableOpacity
+                          onPress={() => handleRemoveQuestion(q.id)}
+                          style={{ padding: 4 }}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <X size={16} color={colors.danger} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   </View>
 
                   <Input
@@ -878,6 +1170,32 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
           wide
           isDark={isDark}
         >
+          {/* Header Action: Copy full paper */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: spacing.md,
+              flexWrap: 'wrap',
+              gap: spacing.sm,
+            }}
+          >
+            <Text style={{ fontSize: 13, color: colors.inkSoft }}>
+              {viewQuestionPaperExam.questions.length} questions • Duration: {viewQuestionPaperExam.duration}m
+            </Text>
+
+            <Button
+              size="sm"
+              variant={copiedPaper ? 'primary' : 'ghost'}
+              icon={copiedPaper ? CheckCircle2 : Copy}
+              onPress={() => handleCopyQuestionPaper(viewQuestionPaperExam)}
+              isDark={isDark}
+            >
+              {copiedPaper ? 'Copied Full Paper!' : 'Copy Entire Paper'}
+            </Button>
+          </View>
+
           <View style={{ gap: spacing.md }}>
             {viewQuestionPaperExam.questions.map((q, idx) => (
               <View
@@ -888,9 +1206,57 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
                   padding: spacing.md,
                 }}
               >
-                <Text style={{ fontSize: 14.5, fontWeight: '700', color: colors.ink }}>
-                  {idx + 1}. {q.q}
-                </Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    gap: spacing.sm,
+                  }}
+                >
+                  <Text
+                    selectable
+                    style={
+                      {
+                        fontSize: 14.5,
+                        fontWeight: '700',
+                        color: colors.ink,
+                        flex: 1,
+                        userSelect: 'text',
+                      } as any
+                    }
+                  >
+                    {idx + 1}. {q.q}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => handleCopySingleQuestion(q, idx)}
+                    title="Copy Question"
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      paddingVertical: 2,
+                      paddingHorizontal: 6,
+                      borderRadius: radius.sm,
+                      backgroundColor: colors.surface,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    {copiedQId === q.id ? (
+                      <>
+                        <Check size={12} color="#1E7A52" />
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: '#1E7A52' }}>Copied</Text>
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={12} color={colors.inkSoft} />
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: colors.inkSoft }}>Copy</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+
                 <View style={{ gap: 4, marginTop: spacing.sm }}>
                   {q.options.map((opt, oi) => {
                     const isCorrect = oi === q.correct;
@@ -908,11 +1274,15 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
                         }}
                       >
                         <Text
-                          style={{
-                            fontSize: 13,
-                            fontWeight: isCorrect ? '700' : '400',
-                            color: isCorrect ? '#1E7A52' : colors.ink,
-                          }}
+                          selectable
+                          style={
+                            {
+                              fontSize: 13,
+                              fontWeight: isCorrect ? '700' : '400',
+                              color: isCorrect ? '#1E7A52' : colors.ink,
+                              userSelect: 'text',
+                            } as any
+                          }
                         >
                           {String.fromCharCode(65 + oi)}. {opt}
                         </Text>
@@ -1119,213 +1489,540 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
         );
       })()}
 
-      {/* STUDENT: Live MCQ Exam Screen */}
+      {/* STUDENT: Live MCQ Exam Screen (Full-Screen Lockdown Mode) */}
       {takingExam && (() => {
         const q = takingExam.questions[currentQuestionIndex];
         const minutes = Math.floor(secondsRemaining / 60);
         const seconds = secondsRemaining % 60;
         const timeFormatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         const allAnswered = studentAnswers.every((a) => a !== -1);
+        const answeredCount = studentAnswers.filter((a) => a !== -1).length;
 
         return (
-          <Modal
-            title={`Locked Exam Mode — ${takingExam.title}`}
-            onClose={() => {}}
-            wide
-            isDark={isDark}
+          <RNModal
+            visible={true}
+            animationType="fade"
+            onRequestClose={() => {
+              if (Platform.OS === 'web') {
+                reEnterFullscreen();
+              }
+            }}
+            transparent={false}
+            statusBarTranslucent
           >
-            {/* Top Exam Status Bar */}
             <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                backgroundColor: colors.surface2,
-                padding: spacing.sm,
-                borderRadius: radius.md,
-                marginBottom: spacing.md,
-              }}
+              style={[
+                {
+                  flex: 1,
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: colors.bg,
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                } as any,
+                Platform.OS === 'web' && ({
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: '100vw',
+                  height: '100vh',
+                  zIndex: 999999,
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                } as any),
+              ]}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Maximize size={15} color={colors.brandDark} />
-                <Text style={{ fontSize: 12.5, fontWeight: '700', color: colors.brandDark }}>
-                  Fullscreen Anti-Cheat Active
-                </Text>
-              </View>
-
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Clock size={16} color={secondsRemaining < 120 ? colors.danger : colors.ink} />
-                <Text
+              {/* Fullscreen Lockdown Re-entry Overlay (shown when exited fullscreen e.g. via Esc) */}
+              {!isInFullscreen && (
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={reEnterFullscreen}
                   style={{
-                    fontSize: 15,
-                    fontWeight: '700',
-                    color: secondsRemaining < 120 ? colors.danger : colors.ink,
+                    position: Platform.OS === 'web' ? ('fixed' as any) : 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(15, 12, 35, 0.96)',
+                    zIndex: 9999999,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: spacing.xl,
                   }}
                 >
-                  {timeFormatted}
-                </Text>
-              </View>
-            </View>
-
-            {/* Warning Banner Flash */}
-            {warningFlash && (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                  backgroundColor: colors.dangerTint,
-                  padding: spacing.md,
-                  borderRadius: radius.md,
-                  marginBottom: spacing.md,
-                }}
-              >
-                <AlertTriangle size={18} color={colors.danger} />
-                <Text style={{ fontSize: 13, fontWeight: '700', color: colors.danger, flex: 1 }}>
-                  {warningFlash}
-                </Text>
-              </View>
-            )}
-
-            {/* Current Question */}
-            <Text style={{ fontSize: 12.5, fontWeight: '700', color: colors.inkSoft, textTransform: 'uppercase' }}>
-              Question {currentQuestionIndex + 1} of {takingExam.questions.length}
-            </Text>
-
-            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.ink, marginTop: 4, marginBottom: spacing.md }}>
-              {q.q}
-            </Text>
-
-            {/* Options */}
-            <View style={{ gap: spacing.sm, marginBottom: spacing.lg }}>
-              {q.options.map((opt, oIdx) => {
-                const isSelected = studentAnswers[currentQuestionIndex] === oIdx;
-                return (
-                  <TouchableOpacity
-                    key={oIdx}
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      const newAns = [...studentAnswers];
-                      newAns[currentQuestionIndex] = oIdx;
-                      setStudentAnswers(newAns);
-                    }}
+                  <View
                     style={{
-                      flexDirection: 'row',
+                      backgroundColor: colors.surface,
+                      borderRadius: radius.xl,
+                      padding: spacing.xxl,
+                      maxWidth: 520,
+                      width: '100%',
                       alignItems: 'center',
-                      gap: spacing.sm,
-                      paddingVertical: 10,
-                      paddingHorizontal: spacing.md,
-                      borderRadius: radius.md,
-                      borderWidth: 1,
-                      borderColor: isSelected ? colors.brand : colors.border,
-                      backgroundColor: isSelected ? colors.brandTint : colors.surface2,
+                      borderWidth: 2,
+                      borderColor: colors.danger,
+                      shadowColor: colors.ink,
+                      shadowOffset: { width: 0, height: 10 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 20,
+                      elevation: 10,
                     }}
                   >
                     <View
                       style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: 10,
-                        borderWidth: 2,
-                        borderColor: isSelected ? colors.brandDark : colors.inkSoft,
-                        backgroundColor: isSelected ? colors.brandDark : 'transparent',
+                        width: 64,
+                        height: 64,
+                        borderRadius: 32,
+                        backgroundColor: colors.dangerTint,
                         alignItems: 'center',
                         justifyContent: 'center',
+                        marginBottom: spacing.md,
                       }}
                     >
-                      {isSelected && <Check size={12} color="#FFFFFF" />}
+                      <AlertTriangle size={36} color={colors.danger} />
                     </View>
+
+                    <Text
+                      style={{
+                        fontSize: 22,
+                        fontWeight: '800',
+                        color: colors.ink,
+                        marginBottom: spacing.sm,
+                        textAlign: 'center',
+                      }}
+                    >
+                      Fullscreen Mode Required
+                    </Text>
+
                     <Text
                       style={{
                         fontSize: 14,
-                        fontWeight: isSelected ? '700' : '400',
-                        color: isSelected ? colors.brandDark : colors.ink,
+                        color: colors.inkSoft,
+                        textAlign: 'center',
+                        lineHeight: 22,
+                        marginBottom: spacing.xl,
                       }}
                     >
-                      {opt}
+                      Exiting fullscreen mode is strictly disallowed during an active exam.
+                      A proctoring violation has been recorded. Click anywhere or press the button below to return to full-screen mode and resume your exam.
                     </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
 
-            {/* Question Quick-Nav Dots */}
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.lg }}>
-              {takingExam.questions.map((_, idx) => {
-                const isAnswered = studentAnswers[idx] !== -1;
-                const isCurrent = currentQuestionIndex === idx;
-                return (
-                  <TouchableOpacity
-                    key={idx}
-                    onPress={() => setCurrentQuestionIndex(idx)}
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      icon={Maximize}
+                      onPress={reEnterFullscreen}
+                      isDark={isDark}
+                      style={{ width: '100%' }}
+                    >
+                      Return to Fullscreen Mode
+                    </Button>
+                  </View>
+                </TouchableOpacity>
+              )}
+
+              {/* Full-width Top Header Bar */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: spacing.xl,
+                  paddingVertical: spacing.md,
+                  backgroundColor: colors.surface,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.border,
+                }}
+              >
+                {/* Left: Exam Info */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 }}>
+                  <View
                     style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: radius.sm,
+                      width: 40,
+                      height: 40,
+                      borderRadius: radius.md,
+                      backgroundColor: colors.brandTint,
                       alignItems: 'center',
                       justifyContent: 'center',
-                      backgroundColor: isCurrent
-                        ? colors.brand
-                        : isAnswered
-                        ? colors.brandTint
-                        : colors.surface2,
+                    }}
+                  >
+                    <Lock size={20} color={colors.brandDark} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        fontSize: 17,
+                        fontWeight: '800',
+                        color: colors.ink,
+                      }}
+                      numberOfLines={1}
+                    >
+                      Locked Exam Mode — {takingExam.title}
+                    </Text>
+                    <Text style={{ fontSize: 13, color: colors.inkSoft, fontWeight: '500' }}>
+                      Question {currentQuestionIndex + 1} of {takingExam.questions.length} • {cls.name}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Right: Anti-cheat badge, Warnings & Timer */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                      backgroundColor: colors.brandTint,
+                      paddingHorizontal: spacing.md,
+                      paddingVertical: 7,
+                      borderRadius: radius.full,
+                    }}
+                  >
+                    <Maximize size={15} color={colors.brandDark} />
+                    <Text style={{ fontSize: 12.5, fontWeight: '700', color: colors.brandDark }}>
+                      Fullscreen Anti-Cheat Active
+                    </Text>
+                  </View>
+
+                  {warningCount > 0 && (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        backgroundColor: colors.dangerTint,
+                        paddingHorizontal: spacing.md,
+                        paddingVertical: 7,
+                        borderRadius: radius.full,
+                      }}
+                    >
+                      <AlertTriangle size={15} color={colors.danger} />
+                      <Text style={{ fontSize: 12.5, fontWeight: '700', color: colors.danger }}>
+                        {warningCount}/3 Warnings
+                      </Text>
+                    </View>
+                  )}
+
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                      backgroundColor: secondsRemaining < 120 ? colors.dangerTint : colors.surface2,
+                      paddingHorizontal: spacing.md,
+                      paddingVertical: 7,
+                      borderRadius: radius.md,
                       borderWidth: 1,
-                      borderColor: isCurrent ? colors.brand : colors.border,
+                      borderColor: secondsRemaining < 120 ? colors.danger : colors.border,
+                    }}
+                  >
+                    <Clock size={17} color={secondsRemaining < 120 ? colors.danger : colors.ink} />
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: '800',
+                        color: secondsRemaining < 120 ? colors.danger : colors.ink,
+                      }}
+                    >
+                      {timeFormatted}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Warning Banner Flash */}
+              {warningFlash && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10,
+                    backgroundColor: colors.dangerTint,
+                    paddingHorizontal: spacing.xl,
+                    paddingVertical: spacing.md,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.danger,
+                  }}
+                >
+                  <AlertTriangle size={18} color={colors.danger} />
+                  <Text style={{ fontSize: 13.5, fontWeight: '700', color: colors.danger, flex: 1 }}>
+                    {warningFlash}
+                  </Text>
+                </View>
+              )}
+
+              {/* Main Full-Screen Question & Options Area */}
+              <ScrollView
+                style={{ flex: 1, width: '100%' }}
+                contentContainerStyle={{
+                  flexGrow: 1,
+                  paddingHorizontal: spacing.xl,
+                  paddingVertical: spacing.xl,
+                  alignItems: 'center',
+                }}
+                showsVerticalScrollIndicator={false}
+              >
+                <View
+                  style={{
+                    width: '100%',
+                    maxWidth: 1000,
+                    backgroundColor: colors.surface,
+                    borderRadius: radius.xl,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    padding: spacing.xxl,
+                    gap: spacing.lg,
+                  }}
+                >
+                  {/* Question Meta */}
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      paddingBottom: spacing.sm,
+                      borderBottomWidth: 1,
+                      borderBottomColor: colors.surface2,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: '800',
+                        color: colors.brandDark,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.8,
+                      }}
+                    >
+                      Question {currentQuestionIndex + 1} of {takingExam.questions.length}
+                    </Text>
+
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: '700',
+                        color: studentAnswers[currentQuestionIndex] !== -1 ? colors.success : colors.inkSoft,
+                      }}
+                    >
+                      {studentAnswers[currentQuestionIndex] !== -1 ? '● Answered' : '○ Not Answered'}
+                    </Text>
+                  </View>
+
+                  {/* Question Text */}
+                  <Text
+                    selectable={false}
+                    style={
+                      {
+                        fontSize: 19,
+                        fontWeight: '700',
+                        color: colors.ink,
+                        lineHeight: 28,
+                        userSelect: 'none',
+                      } as any
+                    }
+                  >
+                    {q.q}
+                  </Text>
+
+                  {/* Options List */}
+                  <View style={{ gap: spacing.md, marginTop: spacing.xs }}>
+                    {q.options.map((opt, oIdx) => {
+                      const isSelected = studentAnswers[currentQuestionIndex] === oIdx;
+                      const letter = String.fromCharCode(65 + oIdx);
+
+                      return (
+                        <TouchableOpacity
+                          key={oIdx}
+                          activeOpacity={0.85}
+                          onPress={() => {
+                            const newAns = [...studentAnswers];
+                            newAns[currentQuestionIndex] = oIdx;
+                            setStudentAnswers(newAns);
+                          }}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: spacing.md,
+                            paddingVertical: 14,
+                            paddingHorizontal: spacing.lg,
+                            borderRadius: radius.lg,
+                            borderWidth: 2,
+                            borderColor: isSelected ? colors.brand : colors.border,
+                            backgroundColor: isSelected ? colors.brandTint : colors.surface,
+                          }}
+                        >
+                          {/* Letter / Radio Circle */}
+                          <View
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 14,
+                              borderWidth: 2,
+                              borderColor: isSelected ? colors.brandDark : colors.border,
+                              backgroundColor: isSelected ? colors.brandDark : colors.surface2,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {isSelected ? (
+                              <Check size={14} color="#FFFFFF" strokeWidth={3} />
+                            ) : (
+                              <Text style={{ fontSize: 12, fontWeight: '700', color: colors.inkSoft }}>
+                                {letter}
+                              </Text>
+                            )}
+                          </View>
+
+                          <Text
+                            selectable={false}
+                            style={
+                              {
+                                fontSize: 15,
+                                fontWeight: isSelected ? '700' : '500',
+                                color: isSelected ? colors.brandDark : colors.ink,
+                                flex: 1,
+                                lineHeight: 22,
+                                userSelect: 'none',
+                              } as any
+                            }
+                          >
+                            {opt}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {/* Question Quick-Nav Palette */}
+                  <View
+                    style={{
+                      paddingTop: spacing.md,
+                      borderTopWidth: 1,
+                      borderTopColor: colors.surface2,
+                      gap: spacing.sm,
                     }}
                   >
                     <Text
                       style={{
                         fontSize: 12,
                         fontWeight: '700',
-                        color: isCurrent
-                          ? '#FFFFFF'
-                          : isAnswered
-                          ? colors.brandDark
-                          : colors.inkSoft,
+                        color: colors.inkSoft,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.5,
                       }}
                     >
-                      {idx + 1}
+                      Question Palette
                     </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                      {takingExam.questions.map((_, idx) => {
+                        const isAnswered = studentAnswers[idx] !== -1;
+                        const isCurrent = currentQuestionIndex === idx;
 
-            {/* Navigation & Submit Buttons */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Button
-                variant="ghost"
-                size="md"
-                disabled={currentQuestionIndex === 0}
-                onPress={() => setCurrentQuestionIndex((prev) => prev - 1)}
-                isDark={isDark}
+                        return (
+                          <TouchableOpacity
+                            key={idx}
+                            onPress={() => setCurrentQuestionIndex(idx)}
+                            style={{
+                              minWidth: 36,
+                              height: 36,
+                              paddingHorizontal: 8,
+                              borderRadius: radius.md,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: isCurrent
+                                ? colors.brand
+                                : isAnswered
+                                ? colors.brandTint
+                                : colors.surface2,
+                              borderWidth: 1.5,
+                              borderColor: isCurrent
+                                ? colors.brand
+                                : isAnswered
+                                ? colors.brandDark
+                                : colors.border,
+                            }}
+                          >
+                            <Text
+                              style={{
+                                fontSize: 13,
+                                fontWeight: '700',
+                                color: isCurrent
+                                  ? '#FFFFFF'
+                                  : isAnswered
+                                  ? colors.brandDark
+                                  : colors.inkSoft,
+                              }}
+                            >
+                              {idx + 1}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+                </View>
+              </ScrollView>
+
+              {/* Full-width Sticky Bottom Navigation Bar */}
+              <View
+                style={{
+                  paddingHorizontal: spacing.xl,
+                  paddingVertical: spacing.md,
+                  borderTopWidth: 1,
+                  borderTopColor: colors.border,
+                  backgroundColor: colors.surface,
+                }}
               >
-                Previous
-              </Button>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    maxWidth: 1000,
+                    width: '100%',
+                    alignSelf: 'center',
+                  }}
+                >
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    disabled={currentQuestionIndex === 0}
+                    onPress={() => setCurrentQuestionIndex((prev) => prev - 1)}
+                    isDark={isDark}
+                  >
+                    Previous
+                  </Button>
 
-              {currentQuestionIndex < takingExam.questions.length - 1 ? (
-                <Button
-                  variant="primary"
-                  size="md"
-                  onPress={() => setCurrentQuestionIndex((prev) => prev + 1)}
-                  isDark={isDark}
-                >
-                  Next
-                </Button>
-              ) : (
-                <Button
-                  variant="primary"
-                  size="md"
-                  icon={Check}
-                  disabled={!allAnswered}
-                  onPress={() => finishAttempt(false, warningCount)}
-                  isDark={isDark}
-                >
-                  Submit Exam
-                </Button>
-              )}
+                  <Text style={{ fontSize: 13, color: colors.inkSoft, fontWeight: '600' }}>
+                    {answeredCount} of {takingExam.questions.length} answered
+                  </Text>
+
+                  {currentQuestionIndex < takingExam.questions.length - 1 ? (
+                    <Button
+                      variant="primary"
+                      size="md"
+                      onPress={() => setCurrentQuestionIndex((prev) => prev + 1)}
+                      isDark={isDark}
+                    >
+                      Next
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      size="md"
+                      icon={Check}
+                      disabled={!allAnswered}
+                      onPress={() => finishAttempt(false, warningCount)}
+                      isDark={isDark}
+                    >
+                      Submit Exam
+                    </Button>
+                  )}
+                </View>
+              </View>
             </View>
-          </Modal>
+          </RNModal>
         );
       })()}
     </View>
