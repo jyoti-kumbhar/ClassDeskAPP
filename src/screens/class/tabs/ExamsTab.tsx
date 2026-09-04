@@ -920,7 +920,7 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <TouchableOpacity
                         onPress={() => handleDuplicateQuestion(qIdx)}
-                        title="Duplicate this question"
+                        accessibilityLabel="Duplicate this question"
                         style={{
                           flexDirection: 'row',
                           alignItems: 'center',
@@ -940,7 +940,7 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
                       {Platform.OS === 'web' && typeof navigator !== 'undefined' && (
                         <TouchableOpacity
                           onPress={() => handlePasteIntoQuestion(q.id)}
-                          title="Paste question & answers from clipboard"
+                          accessibilityLabel="Paste question & answers from clipboard"
                           style={{
                             flexDirection: 'row',
                             alignItems: 'center',
@@ -1230,7 +1230,7 @@ export const ExamsTab: React.FC<ExamsTabProps> = ({
                   </Text>
                   <TouchableOpacity
                     onPress={() => handleCopySingleQuestion(q, idx)}
-                    title="Copy Question"
+                    accessibilityLabel="Copy Question"
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
